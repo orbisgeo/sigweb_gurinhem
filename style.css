@@ -19,11 +19,20 @@ html, body {
   padding: 0;
   font-family: var(--font-main);
   background: var(--bg-body);
+  box-sizing: border-box;
+}
+
+*, *::before, *::after {
+  box-sizing: inherit;
 }
 
 /* === MAPA === */
 #map {
   height: 100%;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 
 /* === FORMULÁRIO DE BUSCA === */
@@ -33,10 +42,10 @@ html, body {
   left: 16px;
   z-index: 1000;
   background: var(--bg-white);
-  padding: 20px;
-  border-radius: 16px;
+  padding: 16px;
+  border-radius: 14px;
   box-shadow: var(--box-shadow);
-  width: 180px;
+  width: 220px;
   font-family: var(--font-main);
 }
 
@@ -48,11 +57,11 @@ html, body {
   color: var(--text-color);
 }
 
-.search-container select,
-.search-container input {
+.search-container input,
+.search-container select {
   width: 100%;
-  padding: 10px 12px;
-  margin-bottom: 12px;
+  padding: 8px 10px;
+  margin-bottom: 10px;
   font-size: 14px;
   background: var(--bg-body);
   border: 1px solid #cbd5e1;
@@ -60,8 +69,8 @@ html, body {
   transition: all 0.2s ease;
 }
 
-.search-container select:focus,
-.search-container input:focus {
+.search-container input:focus,
+.search-container select:focus {
   outline: none;
   border-color: var(--primary);
   background-color: var(--bg-white);
@@ -75,7 +84,7 @@ html, body {
 /* === BOTÃO === */
 .search-container button {
   width: 100%;
-  padding: 12px;
+  padding: 10px;
   font-size: 14px;
   font-weight: 600;
   color: #fff;
@@ -93,10 +102,10 @@ html, body {
 /* === SUGESTÕES (AUTOCOMPLETE) === */
 #sugestoes {
   position: absolute;
-  top: 100%;
-  margin-top: -10px;
+  left: 16px;
+  top: 144px;
   z-index: 1001;
-  width: 160px;
+  width: 220px;
   max-height: 150px;
   overflow-y: auto;
   display: none;
@@ -141,14 +150,16 @@ html, body {
 /* === RESPONSIVO BÁSICO === */
 @media (max-width: 480px) {
   .search-container {
-    width: calc(100% - 24px);
-    left: 12px;
-    right: 12px;
-    padding: 16px;
+    width: calc(100% - 32px);
+    left: 16px;
+    right: 16px;
+    top: 12px;
+    padding: 12px;
   }
 
   #sugestoes {
     width: calc(100% - 32px);
+    left: 16px;
   }
 
   .leaflet-control-layers {
