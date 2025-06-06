@@ -147,6 +147,12 @@ html, body {
   margin-bottom: 6px;
 }
 
+/* === AJUSTE DO CONTROLE DE ZOOM === */
+.leaflet-control-zoom {
+  top: 260px !important; /* Abaixo da caixa de busca */
+  left: 16px !important;
+}
+
 /* === RESPONSIVO BÁSICO === */
 @media (max-width: 480px) {
   .search-container {
@@ -166,4 +172,9 @@ html, body {
     right: 12px !important;
     bottom: 80px !important;
   }
+
+  .leaflet-control-zoom {
+    top: 230px !important;
+  }
 }
+
