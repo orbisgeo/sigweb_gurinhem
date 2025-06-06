@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>Mapa Interativo de Gurinhém</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      font-family: 'Rubik', sans-serif;
+      background: #f3f4f6;
+    }
+    #map {
+      height: 100%;
+    }
+    .search-container {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      z-index: 1000;
+      background: white;
+      padding: 16px;
+      border-radius: 14px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+      width: 300px;
+      max-width: calc(100% - 32px);
+    }
+    .search-container label {
+      font-weight: 600;
+      margin-bottom: 4px;
+      display: block;
+      font-size: 14px;
+    }
+    select, input {
+      margin-bottom: 12px;
+      width: 100%;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+    #sugestoes {
+      margin-top: -10px;
+      background: white;
+      border: 1px solid #ccc;
+      border-top: none;
+      border-radius: 0 0 10px 10px;
+      max-height: 150px;
+      overflow-y: auto;
+      font-size: 14px;
+      display: none;
+      position: absolute;
+      width: 268px;
+      z-index: 1001;
+    }
+    #sugestoes div {
+      padding: 10px;
+      cursor: pointer;
+    }
+    #sugestoes div:hover {
+      background-color: #f0f0f0;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      font-size: 15px;
+      border: none;
+      background-color: #111827;
+      color: white;
+      border-radius: 10px;
+      font-weight: 600;
+      transition: 0.3s;
+    }
+    button:hover {
+      background-color: #1f2937;
+    }
+  </style>
+</head>
+<body>
+  <div class="search-container">
+    <label>Camada:</label>
+    <select id="camadaSelect"></select>
+    <label>Campo:</label>
+    <select id="campoSelect"></select>
+    <input type="text" id="valorBusca" placeholder="Digite o valor..." autocomplete="off" />
+    <div id="sugestoes"></div>
+    <button onclick="buscarFeicao()">Buscar</button>
+  </div>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.3.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.3.1/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDxxxxxxx",
+      authDomain: "ruas-gurinhem.firebaseapp.com",
+      projectId: "ruas-gurinhem",
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const map = L.map("map", { zoomControl: true, attributionControl: false }).setView([-7.12, -35.42], 15);
+
+    const camadas = {
+      "ruas_nomeadas": { nome: "Ruas", cor: "#FF0000", grupo: L.layerGroup(), campos: [] },
+      "ZONA_URBANA": { nome: "Zona Urbana", cor: "#33a02c", grupo: L.layerGroup(), campos: [] },
+      "corpos_hidricos_gr": { nome: "Corpos Hídricos", cor: "#1c91c0", grupo: L.layerGroup(), campos: [] },
+      "BAIRROS_GR": { nome: "Bairros", cor: "#6a3d9a", grupo: L.layerGroup(), campos: [] },
+      "rodovia": { nome: "Rodovias", cor: "#e6550d", grupo: L.layerGroup(), campos: [] },
+      "QUADRAS_GR": { nome: "Quadras", cor: "#8c564b", grupo: L.layerGroup(), campos: [] },
+      "zona_de_expansao": { nome: "Zona de Expansão", cor: "#d4b000", grupo: L.layerGroup(), campos: [] }
+    };
+
+    const overlays = {};
+    let carregadas = 0;
+    const camadaSelect = document.getElementById("camadaSelect");
+    const campoSelect = document.getElementById("campoSelect");
+    let ultimaBuscaLayer = null;
+    const inputBusca = document.getElementById("valorBusca");
+    const sugestoes = document.getElementById("sugestoes");
+
+    for (const nome in camadas) {
+      camadaSelect.innerHTML += `<option value="${nome}">${camadas[nome].nome}</option>`;
+    }
+
+    camadaSelect.addEventListener("change", async () => {
+      const camada = camadaSelect.value;
+      campoSelect.innerHTML = "<option>Carregando...</option>";
+      const snapshot = await db.collection("GeoData").doc(camada).collection("features").limit(1).get();
+      const doc = snapshot.docs[0]?.data();
+      campoSelect.innerHTML = "";
+      if (doc) {
+        Object.keys(doc.properties).forEach(k => {
+          campoSelect.innerHTML += `<option value="${k}">${k}</option>`;
+        });
+      }
+    });
+
+    inputBusca.addEventListener("input", async () => {
+      const camada = camadaSelect.value;
+      const campo = campoSelect.value;
+      const valor = inputBusca.value.trim().toLowerCase();
+
+      if (!valor || !campo || !camada) return;
+
+      const ref = db.collection("GeoData").doc(camada).collection("features");
+      const snapshot = await ref.get();
+
+      const valoresUnicos = new Set();
+      snapshot.forEach(doc => {
+        const dado = doc.data().properties[campo];
+        if (dado && String(dado).toLowerCase().includes(valor)) {
+          valoresUnicos.add(dado);
+        }
+      });
+
+      sugestoes.innerHTML = "";
+      if (valoresUnicos.size > 0) {
+        valoresUnicos.forEach(v => {
+          const div = document.createElement("div");
+          div.textContent = v;
+          div.onclick = () => {
+            inputBusca.value = v;
+            sugestoes.style.display = "none";
+            buscarFeicao();
+          };
+          sugestoes.appendChild(div);
+        });
+        sugestoes.style.display = "block";
+      } else {
+        sugestoes.style.display = "none";
+      }
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!sugestoes.contains(e.target) && e.target !== inputBusca) {
+        sugestoes.style.display = "none";
+      }
+    });
+
+    async function carregarCamada(nome) {
+      const camada = camadas[nome];
+      const ref = db.collection("GeoData").doc(nome).collection("features");
+      const snapshot = await ref.get();
+
+      snapshot.forEach(doc => {
+        const dados = doc.data();
+        const geojson = JSON.parse(dados.geometry);
+        const feature = L.geoJSON(geojson, {
+          style: { color: camada.cor, weight: 2 },
+          onEachFeature: function (feature, layer) {
+            let popup = "";
+            for (const [k, v] of Object.entries(dados.properties)) {
+              popup += `<strong>${k}</strong>: ${v}<br>`;
+            }
+            layer.bindPopup(popup);
+          }
+        }).addTo(camada.grupo);
+        feature.properties = dados.properties;
+      });
+
+      camada.grupo.addTo(map);
+      overlays[camadas[nome].nome] = camada.grupo;
+      carregadas++;
+
+      if (carregadas === Object.keys(camadas).length) {
+        L.control.layers(null, overlays, { collapsed: false }).addTo(map);
+        camadaSelect.dispatchEvent(new Event("change"));
+      }
+    }
+
+    for (const nome in camadas) carregarCamada(nome);
+
+    async function buscarFeicao() {
+      const camada = camadaSelect.value;
+      const campo = campoSelect.value;
+      const valor = inputBusca.value.trim().toLowerCase();
+      if (!valor) return;
+
+      if (ultimaBuscaLayer) {
+        map.removeLayer(ultimaBuscaLayer);
+      }
+
+      const ref = db.collection("GeoData").doc(camada).collection("features");
+      const snapshot = await ref.get();
+
+      const encontrados = [];
+
+      snapshot.forEach(doc => {
+        const dados = doc.data();
+        if (String(dados.properties[campo] || "").toLowerCase() === valor) {
+          encontrados.push({ geometry: JSON.parse(dados.geometry), properties: dados.properties });
+        }
+      });
+
+      if (encontrados.length > 0) {
+        const layerGroup = L.layerGroup();
+
+        encontrados.forEach(item => {
+          const feature = L.geoJSON(item.geometry, {
+            style: { color: "#e41a1c", weight: 4, dashArray: "5, 5" },
+            onEachFeature: function (feature, layer) {
+              let popup = "";
+              for (const [k, v] of Object.entries(item.properties)) {
+                popup += `<strong>${k}</strong>: ${v}<br>`;
+              }
+              layer.bindPopup(popup);
+            }
+          });
+          feature.addTo(layerGroup);
+        });
+
+        layerGroup.addTo(map);
+        map.fitBounds(layerGroup.getBounds());
+        ultimaBuscaLayer = layerGroup;
+      } else {
+        alert("Nenhuma feição encontrada.");
+      }
+    }
+  </script>
+</body>
+</html>
