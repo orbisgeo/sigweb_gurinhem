@@ -1,3 +1,4 @@
+// ======================== CONFIGURAÇÃO INICIAL ========================
 const firebaseConfig = {
   apiKey: "AIzaSyDxxxxxxx",
   authDomain: "ruas-gurinhem.firebaseapp.com",
@@ -14,21 +15,17 @@ const map = L.map("map", {
 });
 
 const maptilerKey = "Ji8wXSrUbB9cb5w3dSsc";
-const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
 const satelite = L.tileLayer(`https://api.maptiler.com/maps/hybrid/{z}/{x}/{y}.jpg?key=${maptilerKey}`, {
   tileSize: 512,
   zoomOffset: -1
 });
-osm.addTo(map);
+satelite.addTo(map);
 
-const baseMaps = {
-  "🗺️ OpenStreetMap": osm,
-  "🛰️ Satélite MapTiler": satelite
-};
-
+const baseMaps = { "🛰️ Satélite MapTiler": satelite };
 const overlays = {};
 const layerControl = L.control.layers(baseMaps, overlays, { collapsed: false }).addTo(map);
 
+// ======================== CAMADAS DEFINIDAS ========================
 const camadas = {
   ruas_nomeadas: { nome: "Ruas", cor: "#FF0000", grupo: L.layerGroup() },
   ZONA_URBANA: { nome: "Zona Urbana", cor: "#33a02c", grupo: L.layerGroup() },
@@ -37,21 +34,20 @@ const camadas = {
   rodovia: { nome: "Rodovias", cor: "#e6550d", grupo: L.layerGroup() },
   QUADRAS_GR: { nome: "Quadras", cor: "#8c564b", grupo: L.layerGroup() },
   zona_de_expansao: { nome: "Zona de Expansão", cor: "#d4b000", grupo: L.layerGroup() },
-  predios_publicos_PMG: { nome: "Prédios Públicos", tipo: "ponto", cor: "#0066CC", grupo: L.layerGroup() }
+  predios_publicos: { nome: "Prédios Públicos", tipo: "ponto", cor: "#0066CC", grupo: L.layerGroup() }
 };
 
-const ativadasPorPadrao = ["ruas_nomeadas", "QUADRAS_GR"];
+const ativadasPorPadrao = ["ruas_nomeadas", "QUADRAS_GR", "BAIRROS_GR"];
 let carregadas = 0;
+const tooltipsQuadras = [];
+const tooltipsPredios = [];
+const cacheCampos = {};
+let ultimaBuscaLayer = null;
 
 const camadaSelect = document.getElementById("camadaSelect");
 const campoSelect = document.getElementById("campoSelect");
 const inputBusca = document.getElementById("valorBusca");
 const sugestoes = document.getElementById("sugestoes");
-let ultimaBuscaLayer = null;
-const cacheCampos = {};
-
-const tooltipsQuadras = [];
-const tooltipsPredios = [];
 
 for (const nome in camadas) {
   camadaSelect.innerHTML += `<option value="${nome}">${camadas[nome].nome}</option>`;
@@ -60,12 +56,10 @@ for (const nome in camadas) {
 camadaSelect.addEventListener("change", async () => {
   const camada = camadaSelect.value;
   campoSelect.innerHTML = "<option>Carregando...</option>";
-
   if (cacheCampos[camada]) {
     preencherCampoSelect(cacheCampos[camada]);
     return;
   }
-
   const snapshot = await db.collection("GeoData").doc(camada).collection("features").limit(1).get();
   const doc = snapshot.docs[0]?.data();
   campoSelect.innerHTML = "";
@@ -86,16 +80,21 @@ function preencherCampoSelect(campos) {
 inputBusca.addEventListener("input", async () => {
   const camada = camadaSelect.value;
   const campo = campoSelect.value;
-  const valor = inputBusca.value.trim().toLowerCase();
-  if (!valor || !campo || !camada) return;
+  const valor = inputBusca.value.trim();
+  if (!valor || !campo || !camada) {
+    sugestoes.innerHTML = "";
+    sugestoes.style.display = "none";
+    return;
+  }
 
   sugestoes.innerHTML = "";
   const ref = db.collection("GeoData").doc(camada).collection("features");
   const snapshot = await ref.get();
   const valoresUnicos = new Set();
+
   snapshot.forEach(doc => {
     const dado = doc.data().properties[campo];
-    if (dado && String(dado).toLowerCase().includes(valor)) {
+    if (dado && String(dado).toLowerCase().includes(valor.toLowerCase())) {
       valoresUnicos.add(dado);
     }
   });
@@ -136,7 +135,14 @@ async function carregarCamada(nome) {
 
   snapshot.forEach(doc => {
     const dados = doc.data();
-    const geojson = JSON.parse(dados.geometry);
+    let geojson;
+    try {
+      geojson = JSON.parse(dados.geometry);
+    } catch (e) {
+      console.error(`Erro ao fazer parse da geometria (${nome}):`, e, dados.geometry);
+      return;
+    }
+
     const cor = nome === "BAIRROS_GR" ? getRandomColor() : camada.cor;
     const props = dados.properties;
 
@@ -149,54 +155,29 @@ async function carregarCamada(nome) {
       }).addTo(camada.grupo);
 
       marker.bindPopup(gerarPopup(props));
-      marker.on("mouseover", function () {
-        this.setStyle({ radius: 8, color: "#ffaa00" });
-      });
-      marker.on("mouseout", function () {
-        this.setStyle({ radius: 6, color: cor });
-      });
-      marker.on("click", function () {
-        this.openPopup();
-      });
-if (nome === "predios_publicos_PMG" && props.nome) {
-  const tooltip = marker.bindTooltip(String(props.nome), {
-    permanent: true,
-    direction: 'top',
-    className: 'label-predio',
-    opacity: 1
-  }).getTooltip();
-  tooltipsPredios.push(tooltip);
-  tooltip._source.closeTooltip();
-}
+      marker.on("mouseover", function () { this.setStyle({ radius: 8, color: "#ffaa00" }); });
+      marker.on("mouseout", function () { this.setStyle({ radius: 6, color: cor }); });
 
+      if (props.nome) {
+        const tooltip = marker.bindTooltip(String(props.nome), {
+          permanent: true, direction: 'top', className: 'label-predio', opacity: 1
+        }).getTooltip();
+        tooltipsPredios.push(tooltip);
+        tooltip._source.closeTooltip();
+      }
     } else {
       const feature = L.geoJSON(geojson, {
         style: { color: cor, weight: 2 },
-        onEachFeature: function (feature, layer) {
+        onEachFeature: (feature, layer) => {
           layer.bindPopup(gerarPopup(props));
-          layer.on("mouseover", function () {
-            this.setStyle({ weight: 4, color: "#ffaa00" });
-          });
-          layer.on("mouseout", function () {
-            this.setStyle({ weight: 2, color: cor });
-          });
-          layer.on("click", function () {
-            this.openPopup();
-          });
-
+          layer.on("mouseover", () => layer.setStyle({ weight: 4, color: "#ffaa00" }));
+          layer.on("mouseout", () => layer.setStyle({ weight: 2, color: cor }));
           if (nome === "QUADRAS_GR" && props.id_quadra) {
-            try {
-              const tooltip = layer.bindTooltip(String(props.id_quadra), {
-                permanent: true,
-                direction: "center",
-                className: "label-quadra",
-                opacity: 1
-              }).getTooltip();
-              tooltipsQuadras.push(tooltip);
-              tooltip._source.closeTooltip();
-            } catch (e) {
-              console.warn("Erro ao adicionar rótulo de quadra:", e);
-            }
+            const tooltip = layer.bindTooltip(String(props.id_quadra), {
+              permanent: true, direction: "center", className: "label-quadra", opacity: 1
+            }).getTooltip();
+            tooltipsQuadras.push(tooltip);
+            tooltip._source.closeTooltip();
           }
         }
       }).addTo(camada.grupo);
@@ -210,7 +191,6 @@ if (nome === "predios_publicos_PMG" && props.nome) {
 
   overlays[camada.nome] = camada.grupo;
   layerControl.addOverlay(camada.grupo, camada.nome);
-
   carregadas++;
   if (carregadas === Object.keys(camadas).length) {
     camadaSelect.dispatchEvent(new Event("change"));
@@ -226,26 +206,15 @@ for (const nome in camadas) carregarCamada(nome);
 map.on("zoomend", () => {
   const zoom = map.getZoom();
   const mostrar = zoom >= 17;
-
-  tooltipsQuadras.forEach(t => {
-    if (t._source) {
-      if (mostrar) t._source.openTooltip();
-      else t._source.closeTooltip();
-    }
-  });
-
-  tooltipsPredios.forEach(t => {
-    if (t._source) {
-      if (mostrar) t._source.openTooltip();
-      else t._source.closeTooltip();
-    }
-  });
+  tooltipsQuadras.forEach(t => t._source && (mostrar ? t._source.openTooltip() : t._source.closeTooltip()));
+  tooltipsPredios.forEach(t => t._source && (mostrar ? t._source.openTooltip() : t._source.closeTooltip()));
 });
 
+// ======================== FUNÇÃO DE BUSCA CORRIGIDA ========================
 async function buscarFeicao() {
   const camada = camadaSelect.value;
   const campo = campoSelect.value;
-  const valor = inputBusca.value.trim().toLowerCase();
+  const valor = inputBusca.value.trim();
   if (!valor || !campo || !camada) return;
 
   sugestoes.innerHTML = "";
@@ -257,33 +226,53 @@ async function buscarFeicao() {
   }
 
   const ref = db.collection("GeoData").doc(camada).collection("features");
-  const snapshot = await ref.where(`properties.${campo}`, "==", valor).get();
-
+  const snapshot = await ref.get();
   const encontrados = [];
+
   snapshot.forEach(doc => {
     const dados = doc.data();
-    encontrados.push({ geometry: JSON.parse(dados.geometry), properties: dados.properties });
+    const dadoCampo = dados.properties?.[campo];
+    if (dadoCampo && String(dadoCampo).trim().toLowerCase() === valor.toLowerCase()) {
+      try {
+        const geometry = JSON.parse(dados.geometry);
+        encontrados.push({ geometry, properties: dados.properties });
+      } catch (e) {
+        console.error("Erro ao fazer parse da geometria:", e);
+      }
+    }
   });
 
   if (encontrados.length > 0) {
-    const layerGroup = L.layerGroup();
+    const featureGroup = L.featureGroup();
     encontrados.forEach(item => {
-      const feature = L.geoJSON(item.geometry, {
-        style: { color: "#FFD700", weight: 5, dashArray: "4, 3" },
-        onEachFeature: function (feature, layer) {
-          layer.bindPopup(gerarPopup(item.properties));
-          layer.on("click", function () {
-            this.openPopup();
-          });
-        }
-      });
-      feature.addTo(layerGroup);
+      let featureLayer;
+      if (item.geometry.type === "Point") {
+        const [lng, lat] = item.geometry.coordinates;
+        featureLayer = L.circleMarker([lat, lng], {
+          radius: 8, color: "#FFD700", fillColor: "#FFD700", fillOpacity: 0.9, weight: 2
+        });
+      } else {
+        featureLayer = L.geoJSON(item.geometry, {
+          style: { color: "#FFD700", weight: 5, dashArray: "4, 3" }
+        });
+      }
+      featureLayer.bindPopup(gerarPopup(item.properties));
+      featureLayer.on("click", function () { this.openPopup(); });
+      featureLayer.addTo(featureGroup);
     });
 
-    layerGroup.addTo(map);
-    map.fitBounds(layerGroup.getBounds());
-    map.setZoom(18);
-    ultimaBuscaLayer = layerGroup;
+    featureGroup.addTo(map);
+    ultimaBuscaLayer = featureGroup;
+
+    const bounds = featureGroup.getBounds();
+    if (bounds.isValid()) {
+      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 18 });
+    } else if (encontrados.length === 1 && encontrados[0].geometry.type === "Point") {
+      const [lng, lat] = encontrados[0].geometry.coordinates;
+      map.setView([lat, lng], 18);
+    } else {
+      alert("Feição encontrada, mas não foi possível centralizar o mapa.");
+    }
   } else {
     alert("Nenhuma feição encontrada.");
   }
