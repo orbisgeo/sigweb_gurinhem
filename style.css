@@ -13,14 +13,22 @@
   --font-size-md: 14px;
 }
 
-
 *, *::before, *::after {
   box-sizing: inherit;
 }
 
-#map {
+html, body {
+  margin: 0;
+  padding: 0;
   height: 100%;
-  width: 100%;
+  font-family: var(--font-main);
+  background: var(--bg-body);
+  overflow: hidden;
+}
+
+#map {
+  height: 100vh;
+  width: 100vw;
   position: absolute;
   top: 0;
   left: 0;
@@ -37,7 +45,7 @@
   border-radius: 14px;
   box-shadow: var(--box-shadow);
   width: 250px;
-  font-family: var(--font-main);
+  max-width: 90vw;
 }
 
 .search-container label {
@@ -101,9 +109,10 @@
 #sugestoes {
   position: absolute;
   left: 16px;
-  top: 200px;
+  top: calc(100px + 80px);
   z-index: 1001;
   width: 250px;
+  max-width: 90vw;
   max-height: 150px;
   overflow-y: auto;
   display: none;
@@ -131,6 +140,7 @@
   border-radius: 14px;
   box-shadow: var(--box-shadow);
   line-height: 1.5;
+  z-index: 999 !important;
 }
 
 .leaflet-control-layers-expanded {
@@ -149,6 +159,7 @@
 .leaflet-control-zoom {
   top: 280px !important;
   left: 16px !important;
+  z-index: 999 !important;
 }
 
 /* === ESTILOS DOS RÓTULOS === */
@@ -156,45 +167,47 @@
   background: rgba(255, 255, 255, 0);
   color: #000;
   font-weight: bold;
-  border: 0px solid #cccccc00;
-  border-radius: 0px;
+  border: none;
+  border-radius: 0;
   padding: 2px 6px;
   font-size: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0);
+  box-shadow: none;
 }
 
 .leaflet-tooltip.label-predio {
-  background: rgb(255, 255, 255);
+  background: #ffffff;
   color: #000000;
   font-weight: 500;
-  border: 0px solid #dddddd00;
-  border-radius: 0px;
+  border: none;
+  border-radius: 0;
   padding: 2px 6px;
   font-size: 9px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 /* === RESPONSIVO BÁSICO === */
 @media (max-width: 480px) {
   .search-container {
-    width: calc(100% - 32px);
+    width: calc(100vw - 32px);
     left: 16px;
-    right: 16px;
     top: 12px;
     padding: 12px;
   }
 
   #sugestoes {
-    width: calc(100% - 32px);
+    width: calc(100vw - 32px);
     left: 16px;
+    top: calc(12px + 120px);
   }
 
   .leaflet-control-layers {
-    right: 12px !important;
+    left: 16px !important;
     bottom: 80px !important;
+    right: auto !important;
   }
 
   .leaflet-control-zoom {
-    top: 230px !important;
+    top: auto !important;
+    bottom: 130px !important;
   }
 }
