@@ -40,7 +40,7 @@ const camadas = {
   predios_publicos_PMG: { nome: "Prédios Públicos", tipo: "ponto", cor: "#0066CC", grupo: L.layerGroup() }
 };
 
-const ativadasPorPadrao = ["ruas_nomeadas", "QUADRAS_GR", "BAIRROS_GR"];
+const ativadasPorPadrao = ["ruas_nomeadas", "QUADRAS_GR"];
 let carregadas = 0;
 
 const camadaSelect = document.getElementById("camadaSelect");
