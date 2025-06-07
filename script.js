@@ -37,7 +37,7 @@ const camadas = {
   rodovia: { nome: "Rodovias", cor: "#e6550d", grupo: L.layerGroup() },
   QUADRAS_GR: { nome: "Quadras", cor: "#8c564b", grupo: L.layerGroup() },
   zona_de_expansao: { nome: "Zona de Expansão", cor: "#d4b000", grupo: L.layerGroup() },
-  predios_publicos: { nome: "Prédios Públicos", tipo: "ponto", cor: "#0066CC", grupo: L.layerGroup() }
+  predios_publicos_pmg: { nome: "Prédios Públicos", tipo: "ponto", cor: "#0066CC", grupo: L.layerGroup() }
 };
 
 const ativadasPorPadrao = ["ruas_nomeadas", "QUADRAS_GR", "BAIRROS_GR"];
