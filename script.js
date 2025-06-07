@@ -284,3 +284,15 @@ function buscarFeicao() {
     console.error("Erro ao buscar feição:", err);
   });
 }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('toggleCamadas');
+    const control = document.querySelector('.leaflet-control-layers');
+
+    if (btn && control) {
+      btn.addEventListener('click', () => {
+        control.classList.toggle('active');
+      });
+    }
+  });
+
