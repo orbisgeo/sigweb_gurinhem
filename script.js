@@ -15,13 +15,20 @@ const map = L.map("map", {
 });
 
 const maptilerKey = "Ji8wXSrUbB9cb5w3dSsc";
+const camadaVazia = L.tileLayer('', { attribution: "" });
+const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
 const satelite = L.tileLayer(`https://api.maptiler.com/maps/hybrid/{z}/{x}/{y}.jpg?key=${maptilerKey}`, {
   tileSize: 512,
   zoomOffset: -1
 });
-satelite.addTo(map);
+camadaVazia.addTo(map);
 
-const baseMaps = { "🛰️ Satélite MapTiler": satelite };
+const baseMaps = {
+  "🚫 Sem Base": camadaVazia,
+  "🗘️ OpenStreetMap": osm,
+  "🛠️ Satélite MapTiler": satelite
+};
+
 const overlays = {};
 const layerControl = L.control.layers(baseMaps, overlays, { collapsed: false }).addTo(map);
 
@@ -34,10 +41,10 @@ const camadas = {
   rodovia: { nome: "Rodovias", cor: "#e6550d", grupo: L.layerGroup() },
   QUADRAS_GR: { nome: "Quadras", cor: "#8c564b", grupo: L.layerGroup() },
   zona_de_expansao: { nome: "Zona de Expansão", cor: "#d4b000", grupo: L.layerGroup() },
-  predios_publicos: { nome: "Prédios Públicos", tipo: "ponto", cor: "#0066CC", grupo: L.layerGroup() }
+  predios_publicos_PMG: { nome: "Prédios Públicos", tipo: "ponto", cor: "#0066CC", grupo: L.layerGroup() }
 };
 
-const ativadasPorPadrao = ["ruas_nomeadas", "QUADRAS_GR"];
+const ativadasPorPadrao = ["ruas_nomeadas", "QUADRAS_GR", "BAIRROS_GR"];
 let carregadas = 0;
 const tooltipsQuadras = [];
 const tooltipsPredios = [];
@@ -158,9 +165,13 @@ async function carregarCamada(nome) {
       marker.on("mouseover", function () { this.setStyle({ radius: 8, color: "#ffaa00" }); });
       marker.on("mouseout", function () { this.setStyle({ radius: 6, color: cor }); });
 
-      if (props.nome) {
-        const tooltip = marker.bindTooltip(String(props.nome), {
-          permanent: true, direction: 'top', className: 'label-predio', opacity: 1
+      const nomePredio = props.NOME || props.nome || props.Nome;
+      if (nomePredio) {
+        const tooltip = marker.bindTooltip(String(nomePredio), {
+          permanent: true,
+          direction: 'top',
+          className: 'label-predio',
+          opacity: 1
         }).getTooltip();
         tooltipsPredios.push(tooltip);
         tooltip._source.closeTooltip();
@@ -209,71 +220,3 @@ map.on("zoomend", () => {
   tooltipsQuadras.forEach(t => t._source && (mostrar ? t._source.openTooltip() : t._source.closeTooltip()));
   tooltipsPredios.forEach(t => t._source && (mostrar ? t._source.openTooltip() : t._source.closeTooltip()));
 });
-
-// ======================== FUNÇÃO DE BUSCA CORRIGIDA ========================
-async function buscarFeicao() {
-  const camada = camadaSelect.value;
-  const campo = campoSelect.value;
-  const valor = inputBusca.value.trim();
-  if (!valor || !campo || !camada) return;
-
-  sugestoes.innerHTML = "";
-  sugestoes.style.display = "none";
-
-  if (ultimaBuscaLayer) {
-    map.removeLayer(ultimaBuscaLayer);
-    ultimaBuscaLayer = null;
-  }
-
-  const ref = db.collection("GeoData").doc(camada).collection("features");
-  const snapshot = await ref.get();
-  const encontrados = [];
-
-  snapshot.forEach(doc => {
-    const dados = doc.data();
-    const dadoCampo = dados.properties?.[campo];
-    if (dadoCampo && String(dadoCampo).trim().toLowerCase() === valor.toLowerCase()) {
-      try {
-        const geometry = JSON.parse(dados.geometry);
-        encontrados.push({ geometry, properties: dados.properties });
-      } catch (e) {
-        console.error("Erro ao fazer parse da geometria:", e);
-      }
-    }
-  });
-
-  if (encontrados.length > 0) {
-    const featureGroup = L.featureGroup();
-    encontrados.forEach(item => {
-      let featureLayer;
-      if (item.geometry.type === "Point") {
-        const [lng, lat] = item.geometry.coordinates;
-        featureLayer = L.circleMarker([lat, lng], {
-          radius: 8, color: "#FFD700", fillColor: "#FFD700", fillOpacity: 0.9, weight: 2
-        });
-      } else {
-        featureLayer = L.geoJSON(item.geometry, {
-          style: { color: "#FFD700", weight: 5, dashArray: "4, 3" }
-        });
-      }
-      featureLayer.bindPopup(gerarPopup(item.properties));
-      featureLayer.on("click", function () { this.openPopup(); });
-      featureLayer.addTo(featureGroup);
-    });
-
-    featureGroup.addTo(map);
-    ultimaBuscaLayer = featureGroup;
-
-    const bounds = featureGroup.getBounds();
-    if (bounds.isValid()) {
-      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 18 });
-    } else if (encontrados.length === 1 && encontrados[0].geometry.type === "Point") {
-      const [lng, lat] = encontrados[0].geometry.coordinates;
-      map.setView([lat, lng], 18);
-    } else {
-      alert("Feição encontrada, mas não foi possível centralizar o mapa.");
-    }
-  } else {
-    alert("Nenhuma feição encontrada.");
-  }
-}
