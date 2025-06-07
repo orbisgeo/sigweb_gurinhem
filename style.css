@@ -13,22 +13,14 @@
   --font-size-md: 14px;
 }
 
+
 *, *::before, *::after {
   box-sizing: inherit;
 }
 
-html, body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  font-family: var(--font-main);
-  background: var(--bg-body);
-  overflow: hidden;
-}
-
 #map {
-  height: 100vh;
-  width: 100vw;
+  height: 100%;
+  width: 100%;
   position: absolute;
   top: 0;
   left: 0;
@@ -45,7 +37,7 @@ html, body {
   border-radius: 14px;
   box-shadow: var(--box-shadow);
   width: 250px;
-  max-width: 90vw;
+  font-family: var(--font-main);
 }
 
 .search-container label {
@@ -109,10 +101,9 @@ html, body {
 #sugestoes {
   position: absolute;
   left: 16px;
-  top: calc(100px + 80px);
+  top: 200px;
   z-index: 1001;
   width: 250px;
-  max-width: 90vw;
   max-height: 150px;
   overflow-y: auto;
   display: none;
@@ -140,7 +131,6 @@ html, body {
   border-radius: 14px;
   box-shadow: var(--box-shadow);
   line-height: 1.5;
-  z-index: 999 !important;
 }
 
 .leaflet-control-layers-expanded {
@@ -159,7 +149,6 @@ html, body {
 .leaflet-control-zoom {
   top: 280px !important;
   left: 16px !important;
-  z-index: 999 !important;
 }
 
 /* === ESTILOS DOS RÓTULOS === */
@@ -167,47 +156,88 @@ html, body {
   background: rgba(255, 255, 255, 0);
   color: #000;
   font-weight: bold;
-  border: none;
-  border-radius: 0;
+  border: 0px solid #cccccc00;
+  border-radius: 0px;
   padding: 2px 6px;
   font-size: 8px;
-  box-shadow: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0);
 }
 
 .leaflet-tooltip.label-predio {
-  background: #ffffff;
+  background: rgb(255, 255, 255);
   color: #000000;
   font-weight: 500;
-  border: none;
-  border-radius: 0;
+  border: 0px solid #dddddd00;
+  border-radius: 0px;
   padding: 2px 6px;
   font-size: 9px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
 /* === RESPONSIVO BÁSICO === */
 @media (max-width: 480px) {
   .search-container {
-    width: calc(100vw - 32px);
+    width: calc(100% - 32px);
     left: 16px;
+    right: 16px;
     top: 12px;
     padding: 12px;
   }
 
   #sugestoes {
-    width: calc(100vw - 32px);
+    width: calc(100% - 32px);
     left: 16px;
-    top: calc(12px + 120px);
   }
 
   .leaflet-control-layers {
-    left: 16px !important;
+    right: 12px !important;
     bottom: 80px !important;
-    right: auto !important;
   }
 
   .leaflet-control-zoom {
-    top: auto !important;
+    top: 230px !important;
+  }
+}
+
+/* BOTÃO RETRÁTIL */
+.btn-camadas {
+  position: absolute;
+  bottom: 80px;
+  left: 16px;
+  z-index: 1001;
+  padding: 10px 14px;
+  background-color: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--border-radius);
+  font-size: var(--font-size-sm);
+  box-shadow: var(--box-shadow);
+  cursor: pointer;
+  display: none; /* Só exibe no mobile */
+}
+
+/* APLICAÇÃO MOBILE */
+@media (max-width: 480px) {
+  .btn-camadas {
+    display: block;
+  }
+
+  .leaflet-control-layers {
+    display: none;
+    position: absolute !important;
     bottom: 130px !important;
+    left: 16px !important;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 1000;
+    width: 200px;
+    background: var(--bg-white);
+    padding: 12px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+  }
+
+  .leaflet-control-layers.active {
+    display: block !important;
   }
 }
