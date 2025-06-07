@@ -26,7 +26,6 @@ html, body {
   box-sizing: inherit;
 }
 
-/* === MAPA === */
 #map {
   height: 100%;
   width: 100%;
@@ -45,7 +44,7 @@ html, body {
   padding: 16px;
   border-radius: 14px;
   box-shadow: var(--box-shadow);
-  width: 220px;
+  width: 250px;
   font-family: var(--font-main);
 }
 
@@ -81,9 +80,16 @@ html, body {
   color: #94a3b8;
 }
 
-/* === BOTÃO === */
+.search-container .form-group.inline {
+  display: flex;
+  gap: 6px;
+}
+
+.search-container .form-group.inline input {
+  flex: 1;
+}
+
 .search-container button {
-  width: 100%;
   padding: 10px;
   font-size: 14px;
   font-weight: 600;
@@ -103,9 +109,9 @@ html, body {
 #sugestoes {
   position: absolute;
   left: 16px;
-  top: 144px;
+  top: 200px;
   z-index: 1001;
-  width: 220px;
+  width: 250px;
   max-height: 150px;
   overflow-y: auto;
   display: none;
@@ -125,13 +131,13 @@ html, body {
   background-color: var(--bg-hover);
 }
 
-/* === CONTROLE LEAFLET CAMADAS === */
+/* === CONTROLE DE CAMADAS === */
 .leaflet-control-layers {
   font-size: 13px;
   background: var(--bg-white);
   padding: 10px;
   border-radius: 14px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--box-shadow);
   line-height: 1.5;
 }
 
@@ -147,10 +153,33 @@ html, body {
   margin-bottom: 6px;
 }
 
-/* === AJUSTE DO CONTROLE DE ZOOM === */
+/* === CONTROLE DE ZOOM === */
 .leaflet-control-zoom {
-  top: 260px !important; /* Abaixo da caixa de busca */
+  top: 280px !important;
   left: 16px !important;
+}
+
+/* === ESTILOS DOS RÓTULOS === */
+.leaflet-tooltip.label-quadra {
+  background: rgba(255, 255, 255, 0.85);
+  color: #000;
+  font-weight: bold;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-size: 12px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.leaflet-tooltip.label-predio {
+  background: rgba(255, 255, 255, 0.661);
+  color: #333;
+  font-weight: 500;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-size: 11px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
 /* === RESPONSIVO BÁSICO === */
@@ -177,4 +206,3 @@ html, body {
     top: 230px !important;
   }
 }
-
