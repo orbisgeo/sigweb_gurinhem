@@ -25,8 +25,8 @@ camadaVazia.addTo(map);
 
 const baseMaps = {
   "🚫 Sem Base": camadaVazia,
-  "🗘️ OpenStreetMap": osm,
-  "🛠️ Satélite MapTiler": satelite
+  "🗘️ MAPA BASE": osm,
+  "🛠️ IMAGEM DE SATÉLITE": satelite
 };
 
 const overlays = {};
@@ -44,7 +44,7 @@ const camadas = {
   predios_publicos_PMG: { nome: "Prédios Públicos", tipo: "ponto", cor: "#0066CC", grupo: L.layerGroup() }
 };
 
-const ativadasPorPadrao = ["ruas_nomeadas", "QUADRAS_GR", "BAIRROS_GR"];
+const ativadasPorPadrao = ["ruas_nomeadas", "QUADRAS_GR"];
 let carregadas = 0;
 const tooltipsQuadras = [];
 const tooltipsPredios = [];
@@ -220,3 +220,67 @@ map.on("zoomend", () => {
   tooltipsQuadras.forEach(t => t._source && (mostrar ? t._source.openTooltip() : t._source.closeTooltip()));
   tooltipsPredios.forEach(t => t._source && (mostrar ? t._source.openTooltip() : t._source.closeTooltip()));
 });
+
+// ======================== BUSCA DE FEIÇÕES ========================
+function buscarFeicao() {
+  const camada = camadaSelect.value;
+  const campo = campoSelect.value;
+  const valor = inputBusca.value.trim();
+
+  if (!valor || !campo || !camada) return;
+
+  if (ultimaBuscaLayer) {
+    map.removeLayer(ultimaBuscaLayer);
+    ultimaBuscaLayer = null;
+  }
+
+  const ref = db.collection("GeoData").doc(camada).collection("features");
+
+  ref.get().then(snapshot => {
+    const encontrados = [];
+
+    snapshot.forEach(doc => {
+      const dados = doc.data();
+      const props = dados.properties;
+      const valorCampo = props[campo];
+
+      if (valorCampo && String(valorCampo).toLowerCase() === valor.toLowerCase()) {
+        let geojson;
+        try {
+          geojson = JSON.parse(dados.geometry);
+        } catch (e) {
+          console.error("Erro no GeoJSON:", e);
+          return;
+        }
+
+        const layer = L.geoJSON(geojson, {
+          style: {
+            color: "yellow",
+            weight: 3,
+            dashArray: "5,5"
+          },
+          pointToLayer: (feature, latlng) =>
+            L.circleMarker(latlng, {
+              radius: 10,
+              color: "yellow",
+              fillColor: "yellow",
+              fillOpacity: 0.7
+            })
+        });
+
+        layer.bindPopup(gerarPopup(props));
+        layer.addTo(map);
+        encontrados.push(layer);
+      }
+    });
+
+    if (encontrados.length > 0) {
+      ultimaBuscaLayer = L.featureGroup(encontrados);
+      map.fitBounds(ultimaBuscaLayer.getBounds().pad(0.3));
+    } else {
+      alert("Nenhuma feição encontrada.");
+    }
+  }).catch(err => {
+    console.error("Erro ao buscar feição:", err);
+  });
+}
