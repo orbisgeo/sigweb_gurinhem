@@ -158,17 +158,17 @@ async function carregarCamada(nome) {
       marker.on("click", function () {
         this.openPopup();
       });
+if (nome === "predios_publicos_PMG" && props.nome) {
+  const tooltip = marker.bindTooltip(String(props.nome), {
+    permanent: true,
+    direction: 'top',
+    className: 'label-predio',
+    opacity: 1
+  }).getTooltip();
+  tooltipsPredios.push(tooltip);
+  tooltip._source.closeTooltip();
+}
 
-      if (props.nome) {
-        const tooltip = marker.bindTooltip(String(props.nome), {
-          permanent: true,
-          direction: 'top',
-          className: 'label-predio',
-          opacity: 1
-        }).getTooltip();
-        tooltipsPredios.push(tooltip);
-        tooltip._source.closeTooltip();
-      }
     } else {
       const feature = L.geoJSON(geojson, {
         style: { color: cor, weight: 2 },
