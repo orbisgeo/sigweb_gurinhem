@@ -40,6 +40,7 @@ const camadas = {
   BAIRROS_GR: { nome: "Bairros", cor: null, grupo: L.layerGroup() },
   rodovia: { nome: "Rodovias", cor: "#e6550d", grupo: L.layerGroup() },
   QUADRAS_GR: { nome: "Quadras", cor: "#8c564b", grupo: L.layerGroup() },
+  lotes_rib: {"Lotes Ribeirão", cor: "#8c564b", grupo: L.layerGroup() },
   zona_de_expansao: { nome: "Zona de Expansão", cor: "#d4b000", grupo: L.layerGroup() },
   predios_publicos_PMG: { nome: "Prédios Públicos", tipo: "ponto", cor: "#0066CC", grupo: L.layerGroup() }
 };
