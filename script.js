@@ -16,8 +16,8 @@ const map = L.map("map", {
 });
 
 const maptilerKey = "Ji8wXSrUbB9cb5w3dSsc";
-const camadaVazia = L.tileLayer('', { attribution: "" });
-const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
+const camadaVazia = L.tileLayer("", { attribution: "" });
+const osm = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png");
 const satelite = L.tileLayer(
   `https://api.maptiler.com/maps/hybrid/{z}/{x}/{y}.jpg?key=${maptilerKey}`,
   { tileSize: 512, zoomOffset: -1 }
@@ -25,9 +25,9 @@ const satelite = L.tileLayer(
 camadaVazia.addTo(map);
 
 const baseMaps = {
-  "🚫 Sem Base": camadaVazia,
-  "🗺️ Mapa Base OSM": osm,
-  "🛰️ Imagem de Satélite": satelite
+  "Sem Base": camadaVazia,
+  "Mapa Base OSM": osm,
+  "Imagem de Satélite": satelite
 };
 
 const overlays = {};
@@ -132,7 +132,7 @@ document.addEventListener("click", (e) => {
 });
 
 function getRandomColor() {
-  return `#${[...crypto.getRandomValues(new Uint8Array(3))].map(x => x.toString(16).padStart(2, '0')).join('')}`;
+  return "#" + [...crypto.getRandomValues(new Uint8Array(3))].map(x => x.toString(16).padStart(2, "0")).join("");
 }
 
 function gerarPopup(properties) {
@@ -173,8 +173,8 @@ async function carregarCamada(nome) {
       if (nomePredio) {
         const tooltip = marker.bindTooltip(String(nomePredio), {
           permanent: true,
-          direction: 'top',
-          className: 'label-predio',
+          direction: "top",
+          className: "label-predio",
           opacity: 1
         }).getTooltip();
         tooltipsPredios.push(tooltip);
@@ -280,12 +280,12 @@ async function buscarFeicao() {
   }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  const btn = document.getElementById('toggleCamadas');
-  const control = document.querySelector('.leaflet-control-layers');
+document.addEventListener("DOMContentLoaded", () => {
+  const btn = document.getElementById("toggleCamadas");
+  const control = document.querySelector(".leaflet-control-layers");
   if (btn && control) {
-    btn.addEventListener('click', () => {
-      control.classList.toggle('active');
+    btn.addEventListener("click", () => {
+      control.classList.toggle("active");
     });
   }
 });
