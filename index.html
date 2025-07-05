@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
     <script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.15.1/build/ol.js"></script>
+    <!-- Adicionado: Proj4js para definição e transformação de projeções -->
+    <script src="https://cdn.jsdelivr.net/npm/proj4@2.9.2/dist/proj4.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -578,6 +580,27 @@
                 visible: false
             });
 
+            // Adicionado: Definição da projeção EPSG:31985 (SIRGAS 2000 / UTM zone 25S)
+            proj4.defs("EPSG:31985", "+proj=utm +zone=25 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs");
+            ol.proj.proj4.register(proj4);
+
+            // Adicionado: Extensão e URL da imagem do drone
+            const extentDroneImage = [231844.66068941046, 9210570.410580005, 232802.90551243777, 9211417.585585851];
+            const urlDroneImage = 'https://github.com/orbisgeo/DRONE-MAP/blob/main/rib_transparente.png?raw=true';
+
+            // Adicionado: Camada da imagem do drone
+            const droneImageLayer = new ol.layer.Image({
+                title: "📸 Imagem de Drone", // Título para o controle de camadas
+                type: 'overlay', // Tipo 'overlay' para que não seja uma camada base
+                source: new ol.source.ImageStatic({
+                    url: urlDroneImage,
+                    projection: 'EPSG:31985', // Projeção de origem da imagem
+                    imageExtent: extentDroneImage,
+                }),
+                opacity: 1.0, // Opacidade da imagem
+                visible: true // Visível por padrão
+            });
+
             // Instancia o controle de escala para poder manipulá-lo
             const scaleLineControl = new ol.control.ScaleLine({
                 units: 'metric', // Medidas métricas (m, km)
@@ -593,17 +616,27 @@
                     osmLayer,
                     sateliteLayer,
                     emptyLayer,
+                    droneImageLayer // Adicionado: Camada da imagem do drone
                 ],
                 view: new ol.View({
                     center: ol.proj.fromLonLat([-35.42, -7.12]), // Guarabira, PB, Brazil
                     zoom: 16,
                     maxZoom: 28,  
-                    minZoom: 1  
+                    minZoom: 1,  
+                    projection: 'EPSG:3857' // Garante que a view use a projeção correta para o OSM
                 }),
                 controls: ol.control.defaults().extend([
                     scaleLineControl, // Adiciona o ScaleLine ao mapa
                     new ol.control.ZoomSlider()
                 ])
+            });
+
+            // Adicionado: Ajuste inicial da visualização para encaixar a imagem do drone
+            const transformedExtentDrone = ol.proj.transformExtent(extentDroneImage, 'EPSG:31985', 'EPSG:3857');
+            map.getView().fit(transformedExtentDrone, {
+                size: map.getSize(),
+                padding: [50, 50, 50, 50], // Adiciona um pequeno preenchimento
+                duration: 1500 // Animação de zoom
             });
 
             // Get references to core UI elements for show/hide logic
@@ -620,6 +653,7 @@
                 document.querySelector('.ol-attribution'),  
             ].filter(Boolean);  
 
+            // Adicionado: Adiciona a camada de drone ao controle de camadas customizado
             map.getLayers().forEach(layer => {
                 if (layer.get('type') === 'base') {
                     const label = document.createElement('label');
@@ -636,6 +670,15 @@
                         });
                     };
                     label.appendChild(radio);
+                    label.appendChild(document.createTextNode(layer.get('title')));
+                    customLayerControl.appendChild(label);
+                } else if (layer.get('type') === 'overlay') { // Adiciona camadas overlay (como a do drone)
+                    const label = document.createElement('label');
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.checked = layer.getVisible();
+                    checkbox.onchange = () => layer.setVisible(checkbox.checked);
+                    label.appendChild(checkbox);
                     label.appendChild(document.createTextNode(layer.get('title')));
                     customLayerControl.appendChild(label);
                 }
@@ -800,7 +843,9 @@
                 const label = document.createElement('label');
                 const checkbox = document.createElement('input');
                 checkbox.type = 'checkbox';
-                checkbox.checked = true;  
+                const visivel = ['lotes_rib', 'QUADRAS_GR'].includes(key);
+checkbox.checked = visivel;
+cfg.layer.setVisible(visivel);  
                 checkbox.onchange = () => cfg.layer.setVisible(checkbox.checked);
                 label.appendChild(checkbox);
                 label.appendChild(document.createTextNode(cfg.nome));
