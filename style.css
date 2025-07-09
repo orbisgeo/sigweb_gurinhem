@@ -54,8 +54,8 @@ body.print-mode-active {
     margin: 0 !important;
 }
 
-.form-container,
-.search-container {
+/* PAINEL DE FERRAMENTAS (normal) */
+.form-container {
     position: absolute;
     z-index: 1000;
     width: 160px;
@@ -64,36 +64,16 @@ body.print-mode-active {
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
     font-size: var(--font-size-sm);
-}
-
-.search-container {
-    top: 16px;
-    left: 16px;
-}
-
-.form-container {
     top: 16px;
     right: 16px;
 }
-
-.form-container h4,
-.search-container h4 {
+.form-container h4 {
     margin-bottom: 6px;
     font-size: var(--font-size-md);
 }
-
-.search-container label {
-    font-size: var(--font-size-sm);
-    margin-bottom: 3px;
-    display: block;
-}
-
 .form-container input,
 .form-container button,
-.form-container select,
-.search-container select,
-.search-container input[type="text"],
-.search-container button {
+.form-container select {
     width: 100%;
     padding: 5px;
     margin-bottom: 6px;
@@ -102,9 +82,7 @@ body.print-mode-active {
     border-radius: var(--border-radius);
     box-sizing: border-box;
 }
-
-.form-container button,
-.search-container button {
+.form-container button {
     font-weight: bold;
     border: none;
     cursor: pointer;
@@ -113,6 +91,50 @@ body.print-mode-active {
     transition: background 0.2s ease;
     padding: 4px 8px;
     font-size: var(--font-size-sm);
+}
+
+/* PAINEL DE PESQUISA (reduzido 25%) */
+.search-container {
+    position: absolute;
+    z-index: 1000;
+    width: 120px;
+    background: var(--bg-white);
+    padding: 6px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    font-size: 10px;
+    top: 16px;
+    left: 16px;
+}
+.search-container h4 {
+    margin-bottom: 6px;
+    font-size: 11px;
+}
+.search-container label {
+    font-size: 10px;
+    margin-bottom: 3px;
+    display: block;
+}
+.search-container input[type="text"],
+.search-container select,
+.search-container button {
+    width: 100%;
+    padding: 4px;
+    margin-bottom: 5px;
+    font-size: 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: var(--border-radius);
+    box-sizing: border-box;
+}
+.search-container button {
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    background: var(--primary);
+    color: #fff;
+    transition: background 0.2s ease;
+    padding: 3px 6px;
+    font-size: 10px;
 }
 
 .btn-apagar {
@@ -152,7 +174,6 @@ body.print-mode-active {
     overflow-y: auto;
     width: 150px;
 }
-
 .custom-layer-control label {
     display: block;
     margin-bottom: 3px;
@@ -202,7 +223,6 @@ body.print-mode-active {
     border-radius: 5px;
     font-size: var(--font-size-sm);
 }
-
 .field-list li {
     padding: 6px 8px;
     display: flex;
@@ -244,7 +264,6 @@ body.print-mode-active {
     color: black;
     border: 1px solid white;
 }
-
 .ol-tooltip-measure:before,
 .ol-tooltip-static:before {
     border-top: 6px solid rgba(255, 255, 255, 0.85);
