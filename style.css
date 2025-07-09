@@ -96,13 +96,13 @@ body.print-mode-active {
   bottom: 16px;
   z-index: 1000;
   background: var(--bg-white);
-  padding: 5px;
+  padding: 4px;
   border-radius: var(--border-radius);
   box-shadow: var(--box-shadow);
-  font-size: 10px;
+  font-size: 9px;
   max-height: calc(100vh - 140px);
   overflow-y: auto;
-  width: 126px;
+  width: 88px;
 }
 
 .form-container h4,
