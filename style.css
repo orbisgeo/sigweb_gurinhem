@@ -1,4 +1,3 @@
-/* Definição de Variáveis CSS (Custom Properties) */
 :root {
     --bg-body: #f9fafb;
     --bg-white: #ffffff;
@@ -9,11 +8,10 @@
     --border-radius: 10px;
     --box-shadow: 0 6px 20px rgba(0, 0, 0, .12);
     --font-main: 'Rubik', sans-serif;
-    --font-size-sm: 13px;
-    --font-size-md: 14px;
+    --font-size-sm: 12px;
+    --font-size-md: 13px;
 }
 
-/* Estilos Globais para HTML e Body */
 html, body {
     height: 100%;
     width: 100%;
@@ -25,7 +23,6 @@ html, body {
     color: var(--text-color);
 }
 
-/* Estilos para o Elemento do Mapa */
 #map {
     height: 100%;
     width: 100%;
@@ -33,7 +30,6 @@ html, body {
     position: relative;
 }
 
-/* Classes para o MODO IMPRESSÃO */
 body.print-mode-active {
     margin: 0;
     padding: 0;
@@ -46,7 +42,6 @@ body.print-mode-active {
     width: 100vw;
 }
 
-/* Estilos para o Mapa no Modo Impressão */
 #map.print-mode-active {
     width: 794px !important;
     height: 1123px !important;
@@ -59,16 +54,16 @@ body.print-mode-active {
     margin: 0 !important;
 }
 
-/* Contêineres */
 .form-container,
 .search-container {
     position: absolute;
     z-index: 1000;
-    width: 260px;
+    width: 200px;
     background: var(--bg-white);
-    padding: 16px;
+    padding: 10px;
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
+    font-size: var(--font-size-sm);
 }
 
 .search-container {
@@ -81,32 +76,28 @@ body.print-mode-active {
     right: 16px;
 }
 
-/* Ocultos no modo impressão */
-.form-container.hidden-for-print,
-.custom-layer-control.hidden-for-print,
-.search-container.hidden-for-print,
-.print-mode-controls.hidden-for-print {
-    display: none !important;
-}
-
 .form-container h4,
 .search-container h4 {
-    margin: 0 0 10px 0;
+    margin-bottom: 8px;
     font-size: var(--font-size-md);
 }
 
 .search-container label {
-    font-size: var(--font-size-md);
+    font-size: var(--font-size-sm);
     margin-bottom: 5px;
     display: block;
 }
 
-.form-container input, .form-container button, .form-container select,
-.search-container select, .search-container input[type="text"], .search-container button {
+.form-container input,
+.form-container button,
+.form-container select,
+.search-container select,
+.search-container input[type="text"],
+.search-container button {
     width: 100%;
-    padding: 8px;
-    margin-bottom: 10px;
-    font-size: var(--font-size-md);
+    padding: 6px;
+    margin-bottom: 8px;
+    font-size: var(--font-size-sm);
     border: 1px solid #cbd5e1;
     border-radius: var(--border-radius);
     box-sizing: border-box;
@@ -120,6 +111,8 @@ body.print-mode-active {
     background: var(--primary);
     color: #fff;
     transition: background 0.2s ease;
+    padding: 6px 10px;
+    font-size: var(--font-size-sm);
 }
 
 .form-container button:hover,
@@ -138,7 +131,6 @@ body.print-mode-active {
     background: var(--primary);
 }
 
-/* Tooltip */
 .ol-tooltip {
     position: relative;
     background: rgba(255, 255, 255, .85);
@@ -151,29 +143,28 @@ body.print-mode-active {
     font-size: 11px;
 }
 
-/* Controle de camadas */
 .custom-layer-control {
     position: absolute;
     left: 16px;
     bottom: 16px;
     z-index: 1000;
     background: var(--bg-white);
-    padding: 10px;
+    padding: 8px;
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
     font-size: var(--font-size-sm);
-    max-height: calc(100vh - 200px);
+    max-height: calc(100vh - 180px);
     overflow-y: auto;
-    width: 200px;
+    width: 180px;
 }
 
 .custom-layer-control label {
     display: block;
-    margin-bottom: 5px;
+    margin-bottom: 4px;
     cursor: pointer;
+    font-size: 12px;
 }
 
-/* Popup OpenLayers */
 .ol-popup {
     background-color: white;
     border: 1px solid #cccccc;
@@ -183,21 +174,23 @@ body.print-mode-active {
     min-width: 200px;
 }
 
-/* Tabela de atributos */
 .table-attributes {
     width: 100%;
     border-collapse: collapse;
     margin-bottom: 10px;
     font-size: var(--font-size-sm);
 }
+
 .table-attributes td {
     padding: 5px 0;
     vertical-align: top;
 }
+
 .table-attributes strong {
     display: block;
     margin-bottom: 3px;
 }
+
 .table-attributes .attribute-value {
     padding: 5px;
     border: 1px solid #eee;
@@ -207,7 +200,6 @@ body.print-mode-active {
     word-wrap: break-word;
 }
 
-/* Lista de campos */
 .field-list {
     list-style: none;
     padding: 0;
@@ -218,6 +210,7 @@ body.print-mode-active {
     border-radius: 5px;
     font-size: var(--font-size-md);
 }
+
 .field-list li {
     padding: 8px 10px;
     display: flex;
@@ -225,9 +218,11 @@ body.print-mode-active {
     align-items: center;
     border-bottom: 1px solid #eee;
 }
+
 .field-list li:last-child {
     border-bottom: none;
 }
+
 .field-list li button {
     background-color: #dc2626;
     color: white;
@@ -240,11 +235,11 @@ body.print-mode-active {
     margin-bottom: 0;
     transition: background 0.2s ease;
 }
+
 .field-list li button:hover {
     background-color: #ef4444;
 }
 
-/* Medição */
 .ol-tooltip-measure {
     background: rgba(255, 255, 255, 0.85);
     color: black;
@@ -255,11 +250,13 @@ body.print-mode-active {
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
     pointer-events: none;
 }
+
 .ol-tooltip-static {
     background-color: #ffcc33;
     color: black;
     border: 1px solid white;
 }
+
 .ol-tooltip-measure:before,
 .ol-tooltip-static:before {
     border-top: 6px solid rgba(255, 255, 255, 0.85);
@@ -271,16 +268,17 @@ body.print-mode-active {
     margin-left: -7px;
     left: 50%;
 }
+
 .ol-tooltip-static:before {
     border-top-color: #ffcc33;
 }
 
-/* Impressão */
 @media print {
     @page {
         size: A4 portrait;
         margin: 0 !important;
     }
+
     html, body {
         height: 100% !important;
         width: 100% !important;
@@ -289,6 +287,7 @@ body.print-mode-active {
         overflow: hidden !important;
         transform: none !important;
     }
+
     #map {
         width: 210mm !important;
         height: 297mm !important;
@@ -302,19 +301,23 @@ body.print-mode-active {
         box-shadow: none !important;
         margin: 0 !important;
     }
+
     .form-container, .custom-layer-control, .print-mode-controls,
     .ol-zoom, .ol-rotate, .ol-attribution,
     .ol-tooltip, .ol-tooltip-help, .ol-tooltip-measure, .search-container {
         display: none !important;
     }
+
     #northArrowPrint, .ol-scale-line {
         display: block !important;
     }
+
     .ol-scale-line {
         bottom: 20px !important;
         left: 20px !important;
         right: auto !important;
     }
+
     #northArrowPrint {
         top: 20px !important;
         right: 20px !important;
