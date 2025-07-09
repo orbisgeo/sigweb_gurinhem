@@ -1,326 +1,396 @@
+/* =================== */
+/* VARIÁVEIS GLOBAIS */
+/* =================== */
 :root {
-    --bg-body: #f9fafb;
-    --bg-white: #ffffff;
-    --text-color: #111827;
-    --primary: #2563eb;
-    --dark: #111827;
-    --dark-hover: #1f2937;
-    --border-radius: 10px;
-    --box-shadow: 0 6px 20px rgba(0, 0, 0, .12);
-    --font-main: 'Rubik', sans-serif;
-    --font-size-sm: 11px;
-    --font-size-md: 12px;
+  --bg-body: #f9fafb;
+  --bg-white: #ffffff;
+  --text-color: #111827;
+  --primary: #2563eb;
+  --dark: #111827;
+  --dark-hover: #1f2937;
+  --border-radius: 10px;
+  --box-shadow: 0 6px 20px rgba(0, 0, 0, .12);
+  --font-main: 'Rubik', sans-serif;
+  --font-size-sm: 11px;
+  --font-size-md: 12px;
 }
 
+/* ================ */
+/* ELEMENTOS BASE  */
+/* ================ */
 html, body {
-    height: 100%;
-    width: 100%;
-    margin: 0;
-    padding: 0;
-    background: var(--bg-body);
-    overflow: hidden;
-    font-family: var(--font-main);
-    color: var(--text-color);
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background: var(--bg-body);
+  overflow: hidden;
+  font-family: var(--font-main);
+  color: var(--text-color);
 }
 
 #map {
-    height: 100%;
-    width: 100%;
-    min-height: 200px;
-    position: relative;
+  height: 100%;
+  width: 100%;
+  min-height: 200px;
+  position: relative;
 }
 
+/* ================ */
+/* MODO IMPRESSÃO   */
+/* ================ */
 body.print-mode-active {
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    background-color: #e0e0e0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    width: 100vw;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: #e0e0e0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  width: 100vw;
 }
 
 #map.print-mode-active {
-    width: 794px !important;
-    height: 1123px !important;
-    position: relative !important;
-    top: auto !important;
-    left: auto !important;
-    transform: none !important;
-    border: 1px solid #333;
-    box-shadow: var(--box-shadow);
-    margin: 0 !important;
+  width: 794px !important;
+  height: 1123px !important;
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  transform: none !important;
+  border: 1px solid #333;
+  box-shadow: var(--box-shadow);
+  margin: 0 !important;
 }
 
-/* PAINEL DE FERRAMENTAS (normal) */
+/* ============================ */
+/* PAINÉIS: PESQUISA, FERRAMENTAS, CAMADAS */
+/* ============================ */
 .form-container {
-    position: absolute;
-    z-index: 1000;
-    width: 160px;
-    background: var(--bg-white);
-    padding: 8px;
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
-    font-size: var(--font-size-sm);
-    top: 16px;
-    right: 16px;
+  position: absolute;
+  z-index: 1000;
+  width: 160px;
+  background: var(--bg-white);
+  padding: 8px;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  font-size: var(--font-size-sm);
+  top: 16px;
+  right: 16px;
 }
-.form-container h4 {
-    margin-bottom: 6px;
-    font-size: var(--font-size-md);
+.search-container {
+  position: absolute;
+  z-index: 1000;
+  width: 120px;
+  background: var(--bg-white);
+  padding: 6px;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  font-size: 10px;
+  top: 16px;
+  left: 16px;
 }
+.custom-layer-control {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  z-index: 1000;
+  background: var(--bg-white);
+  padding: 5px;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  font-size: 10px;
+  max-height: calc(100vh - 140px);
+  overflow-y: auto;
+  width: 126px;
+}
+
+.form-container h4,
+.search-container h4 {
+  margin-bottom: 6px;
+  font-size: var(--font-size-md);
+}
+.search-container label,
+.custom-layer-control label {
+  font-size: 10px;
+  margin-bottom: 3px;
+  display: block;
+  cursor: pointer;
+}
+
 .form-container input,
 .form-container button,
-.form-container select {
-    width: 100%;
-    padding: 5px;
-    margin-bottom: 6px;
-    font-size: var(--font-size-sm);
-    border: 1px solid #cbd5e1;
-    border-radius: var(--border-radius);
-    box-sizing: border-box;
-}
-.form-container button {
-    font-weight: bold;
-    border: none;
-    cursor: pointer;
-    background: var(--primary);
-    color: #fff;
-    transition: background 0.2s ease;
-    padding: 4px 8px;
-    font-size: var(--font-size-sm);
-}
-
-/* PAINEL DE PESQUISA (reduzido 25%) */
-.search-container {
-    position: absolute;
-    z-index: 1000;
-    width: 120px;
-    background: var(--bg-white);
-    padding: 6px;
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
-    font-size: 10px;
-    top: 16px;
-    left: 16px;
-}
-.search-container h4 {
-    margin-bottom: 6px;
-    font-size: 11px;
-}
-.search-container label {
-    font-size: 10px;
-    margin-bottom: 3px;
-    display: block;
-}
-.search-container input[type="text"],
+.form-container select,
 .search-container select,
+.search-container input[type="text"],
 .search-container button {
-    width: 100%;
-    padding: 4px;
-    margin-bottom: 5px;
-    font-size: 10px;
-    border: 1px solid #cbd5e1;
-    border-radius: var(--border-radius);
-    box-sizing: border-box;
-}
-.search-container button {
-    font-weight: bold;
-    border: none;
-    cursor: pointer;
-    background: var(--primary);
-    color: #fff;
-    transition: background 0.2s ease;
-    padding: 3px 6px;
-    font-size: 10px;
+  width: 100%;
+  padding: 4px;
+  margin-bottom: 5px;
+  font-size: 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: var(--border-radius);
+  box-sizing: border-box;
 }
 
+.form-container button,
+.search-container button {
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+  background: var(--primary);
+  color: #fff;
+  transition: background 0.2s ease;
+  padding: 3px 6px;
+  font-size: 10px;
+}
+
+/* Botões Especiais */
 .btn-apagar {
-    background: #dc2626 !important;
+  background: #dc2626 !important;
 }
 .btn-apagar:hover {
-    background: #ef4444 !important;
+  background: #ef4444 !important;
 }
-
 .btn-ordenar {
-    background: var(--primary);
+  background: var(--primary);
 }
 
+/* ================ */
+/* TOOLTIP / POPUP */
+/* ================ */
 .ol-tooltip {
-    position: relative;
-    background: rgba(255, 255, 255, .85);
-    padding: 2px 5px;
-    border-radius: 4px;
-    white-space: nowrap;
-    font-weight: 600;
-    color: var(--text-color);
-    border: 1px solid #ccc;
-    font-size: 10px;
+  position: relative;
+  background: rgba(255, 255, 255, .85);
+  padding: 2px 5px;
+  border-radius: 4px;
+  white-space: nowrap;
+  font-weight: 600;
+  color: var(--text-color);
+  border: 1px solid #ccc;
+  font-size: 10px;
 }
-
-.custom-layer-control {
-    position: absolute;
-    left: 16px;
-    bottom: 16px;
-    z-index: 1000;
-    background: var(--bg-white);
-    padding: 6px;
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
-    font-size: var(--font-size-sm);
-    max-height: calc(100vh - 160px);
-    overflow-y: auto;
-    width: 150px;
-}
-.custom-layer-control label {
-    display: block;
-    margin-bottom: 3px;
-    cursor: pointer;
-    font-size: var(--font-size-sm);
-}
-
 .ol-popup {
-    background-color: white;
-    border: 1px solid #cccccc;
-    padding: 10px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    border-radius: 5px;
-    min-width: 200px;
+  background-color: white;
+  border: 1px solid #cccccc;
+  padding: 10px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  border-radius: 5px;
+  min-width: 200px;
 }
 
+/* ================== */
+/* TABELA DE ATRIBUTOS */
+/* ================== */
 .table-attributes {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 10px;
-    font-size: var(--font-size-sm);
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 10px;
+  font-size: var(--font-size-sm);
 }
 .table-attributes td {
-    padding: 5px 0;
-    vertical-align: top;
+  padding: 5px 0;
+  vertical-align: top;
 }
 .table-attributes strong {
-    display: block;
-    margin-bottom: 3px;
+  display: block;
+  margin-bottom: 3px;
 }
 .table-attributes .attribute-value {
-    padding: 5px;
-    border: 1px solid #eee;
-    border-radius: 3px;
-    background-color: #f9f9f9;
-    display: block;
-    word-wrap: break-word;
+  padding: 5px;
+  border: 1px solid #eee;
+  border-radius: 3px;
+  background-color: #f9f9f9;
+  display: block;
+  word-wrap: break-word;
 }
 
+/* ================ */
+/* LISTA DE CAMPOS  */
+/* ================ */
 .field-list {
-    list-style: none;
-    padding: 0;
-    margin: 10px 0;
-    max-height: 200px;
-    overflow-y: auto;
-    border: 1px solid #eee;
-    border-radius: 5px;
-    font-size: var(--font-size-sm);
+  list-style: none;
+  padding: 0;
+  margin: 10px 0;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #eee;
+  border-radius: 5px;
+  font-size: var(--font-size-sm);
 }
 .field-list li {
-    padding: 6px 8px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid #eee;
+  padding: 6px 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
 }
 .field-list li:last-child {
-    border-bottom: none;
+  border-bottom: none;
 }
 .field-list li button {
-    background-color: #dc2626;
-    color: white;
-    border: none;
-    border-radius: 3px;
-    padding: 2px 6px;
-    cursor: pointer;
-    font-size: var(--font-size-sm);
-    margin-left: 8px;
-    transition: background 0.2s ease;
+  background-color: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  padding: 2px 6px;
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  margin-left: 8px;
+  transition: background 0.2s ease;
 }
 .field-list li button:hover {
-    background-color: #ef4444;
+  background-color: #ef4444;
 }
 
+/* =================== */
+/* TOOLTIP DE MEDIÇÃO */
+/* =================== */
 .ol-tooltip-measure {
-    background: rgba(255, 255, 255, 0.85);
-    color: black;
-    padding: 3px 6px;
-    border-radius: 4px;
-    white-space: nowrap;
-    font-size: 11px;
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
-    pointer-events: none;
+  background: rgba(255, 255, 255, 0.85);
+  color: black;
+  padding: 3px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  font-size: 11px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
 }
-
 .ol-tooltip-static {
-    background-color: #ffcc33;
-    color: black;
-    border: 1px solid white;
+  background-color: #ffcc33;
+  color: black;
+  border: 1px solid white;
 }
 .ol-tooltip-measure:before,
 .ol-tooltip-static:before {
-    border-top: 6px solid rgba(255, 255, 255, 0.85);
-    border-right: 6px solid transparent;
-    border-left: 6px solid transparent;
-    content: "";
-    position: absolute;
-    bottom: -6px;
-    margin-left: -7px;
-    left: 50%;
+  border-top: 6px solid rgba(255, 255, 255, 0.85);
+  border-right: 6px solid transparent;
+  border-left: 6px solid transparent;
+  content: "";
+  position: absolute;
+  bottom: -6px;
+  margin-left: -7px;
+  left: 50%;
 }
 .ol-tooltip-static:before {
-    border-top-color: #ffcc33;
+  border-top-color: #ffcc33;
 }
 
+/* ============= */
+/* IMPRESSÃO    */
+/* ============= */
 @media print {
-    @page {
-        size: A4 portrait;
-        margin: 0 !important;
-    }
-    html, body {
-        height: 100% !important;
-        width: 100% !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        overflow: hidden !important;
-        transform: none !important;
-    }
-    #map {
-        width: 210mm !important;
-        height: 297mm !important;
-        position: absolute !important;
-        top: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        bottom: 0 !important;
-        transform: none !important;
-        border: none !important;
-        box-shadow: none !important;
-        margin: 0 !important;
-    }
-    .form-container, .custom-layer-control, .print-mode-controls,
-    .ol-zoom, .ol-rotate, .ol-attribution,
-    .ol-tooltip, .ol-tooltip-help, .ol-tooltip-measure, .search-container {
-        display: none !important;
-    }
-    #northArrowPrint, .ol-scale-line {
-        display: block !important;
-    }
-    .ol-scale-line {
-        bottom: 20px !important;
-        left: 20px !important;
-        right: auto !important;
-    }
-    #northArrowPrint {
-        top: 20px !important;
-        right: 20px !important;
-        left: auto !important;
-    }
+  @page {
+    size: A4 portrait;
+    margin: 0 !important;
+  }
+  html, body {
+    height: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    transform: none !important;
+  }
+  #map {
+    width: 210mm !important;
+    height: 297mm !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    transform: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+  }
+  .form-container,
+  .custom-layer-control,
+  .print-mode-controls,
+  .ol-zoom,
+  .ol-rotate,
+  .ol-attribution,
+  .ol-tooltip,
+  .ol-tooltip-help,
+  .ol-tooltip-measure,
+  .search-container {
+    display: none !important;
+  }
+  #northArrowPrint,
+  .ol-scale-line {
+    display: block !important;
+  }
+  .ol-scale-line {
+    bottom: 20px !important;
+    left: 20px !important;
+    right: auto !important;
+  }
+  #northArrowPrint {
+    top: 20px !important;
+    right: 20px !important;
+    left: auto !important;
+  }
+}
+
+/* ================ */
+/* PAINÉIS TOGGLE   */
+/* ================ */
+.toggle-button {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: var(--dark);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 10px;
+  cursor: pointer;
+  z-index: 1001;
+}
+.toggle-button::after {
+  content: '\25BC';
+  display: inline-block;
+  margin-left: 4px;
+  transition: transform 0.3s;
+}
+.collapsed .toggle-button::after {
+  transform: rotate(-90deg);
+}
+
+.collapsible {
+  transition: max-height 0.3s ease, padding 0.3s ease;
+  overflow: hidden;
+  max-height: 500px;
+}
+.collapsed {
+  max-height: 22px !important;
+  padding-top: 4px !important;
+  padding-bottom: 0 !important;
+  overflow: hidden !important;
+}
+.collapsed *:not(.toggle-button) {
+  display: none !important;
+}
+.collapsed h4 {
+  display: inline-block !important;
+  margin: 0;
+  font-size: 11px;
+  color: #333;
+}
+
+@media (max-width: 480px) {
+  .form-container,
+  .search-container,
+  .custom-layer-control {
+    max-height: 22px;
+    padding-top: 4px;
+    overflow: hidden;
+  }
+  .form-container.collapsed,
+  .search-container.collapsed,
+  .custom-layer-control.collapsed {
+    max-height: 22px !important;
+  }
 }
