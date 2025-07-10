@@ -1,396 +1,569 @@
-/* =================== */
-/* VARIÁVEIS GLOBAIS */
-/* =================== */
+/* ==========================================================================
+   1. VARIÁVEIS GLOBAIS (THEME)
+   ========================================================================== */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+
 :root {
-  --bg-body: #f9fafb;
-  --bg-white: #ffffff;
-  --text-color: #111827;
-  --primary: #2563eb;
-  --dark: #111827;
-  --dark-hover: #1f2937;
-  --border-radius: 10px;
-  --box-shadow: 0 6px 20px rgba(0, 0, 0, .12);
-  --font-main: 'Rubik', sans-serif;
-  --font-size-sm: 11px;
-  --font-size-md: 12px;
+  --font-family-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  /* Cores */
+  --color-primary: #2563eb;
+  --color-primary-hover: #1d4ed8;
+  --color-danger: #dc2626;
+  --color-danger-hover: #b91c1c;
+  --color-text: #1f2937;
+  --color-text-light: #6b7280;
+  --color-bg: #f9fafb;
+  --color-surface: #ffffff;
+  --color-border: #d1d5db;
+  --color-focus-ring: rgba(37, 99, 235, 0.5);
+
+  /* Novas variáveis para o formulário de atributos / popup */
+  --color-form-bg: #f3f4f6; /* Um cinza claro para o fundo do formulário */
+  --color-header-blue: #2563eb; /* A cor azul do cabeçalho */
+  --color-header-text: #ffffff; /* Cor do texto no cabeçalho */
+  --color-input-filled-bg: #e5e7eb; /* Cor de fundo para inputs preenchidos */
+  --shadow-inset-light: inset 0 1px 2px rgba(0, 0, 0, 0.05); /* Sombra interna sutil */
+
+  /* Layout & Sizing */
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --panel-width: 260px;
+
+  /* Efeitos */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --transition-speed: 0.2s;
 }
 
-/* ================ */
-/* ELEMENTOS BASE  */
-/* ================ */
+/* ==========================================================================
+   2. RESET E ESTILOS BASE
+   ========================================================================== */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 html, body {
   height: 100%;
   width: 100%;
   margin: 0;
   padding: 0;
-  background: var(--bg-body);
-  overflow: hidden;
-  font-family: var(--font-main);
-  color: var(--text-color);
+  background-color: var(--color-bg);
+  font-family: var(--font-family-sans);
+  color: var(--color-text);
+  overflow: hidden; /* Mantido hidden para o mapa, popup se auto-ajustará */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 #map {
   height: 100%;
   width: 100%;
-  min-height: 200px;
-  position: relative;
+  position: relative; /* Mantido relative para o mapa */
+  z-index: 0;
 }
 
-/* ================ */
-/* MODO IMPRESSÃO   */
-/* ================ */
-body.print-mode-active {
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  background-color: #e0e0e0;
+/* ==========================================================================
+   3. PAINÉIS DE UI (FERRAMENTAS, CAMADAS, BUSCA)
+   ========================================================================== */
+.ui-panel {
+  position: absolute;
+  background-color: var(--color-surface);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 1000;
+  transition: all var(--transition-speed) ease-in-out, transform var(--transition-speed) ease-in-out;
   display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  width: 100vw;
+  flex-direction: column;
+  max-height: 80vh; /* Previne que o painel seja maior que a tela */
 }
 
-#map.print-mode-active {
-  width: 794px !important;
-  height: 1123px !important;
-  position: relative !important;
-  top: auto !important;
-  left: auto !important;
-  transform: none !important;
-  border: 1px solid #333;
-  box-shadow: var(--box-shadow);
-  margin: 0 !important;
+#tools-panel {
+  top: var(--spacing-lg);
+  left: var(--spacing-lg);
+  width: 220px;
 }
 
-/* ============================ */
-/* PAINÉIS: PESQUISA, FERRAMENTAS, CAMADAS */
-/* ============================ */
-.form-container {
-  position: absolute;
-  z-index: 1000;
-  width: 160px;
-  background: var(--bg-white);
-  padding: 8px;
-  border-radius: var(--border-radius);
-  box-shadow: var(--box-shadow);
-  font-size: var(--font-size-sm);
-  top: 16px;
-  right: 16px;
-}
-.search-container {
-  position: absolute;
-  z-index: 1000;
-  width: 120px;
-  background: var(--bg-white);
-  padding: 6px;
-  border-radius: var(--border-radius);
-  box-shadow: var(--box-shadow);
-  font-size: 10px;
-  top: 16px;
-  left: 16px;
-}
-.custom-layer-control {
-  position: absolute;
-  left: 16px;
-  bottom: 16px;
-  z-index: 1000;
-  background: var(--bg-white);
-  padding: 4px;
-  border-radius: var(--border-radius);
-  box-shadow: var(--box-shadow);
-  font-size: 9px;
-  max-height: calc(100vh - 140px);
-  overflow-y: auto;
-  width: 88px;
+#search-panel {
+  top: var(--spacing-lg);
+  right: var(--spacing-lg);
+  width: calc(var(--panel-width) * 0.7); /* largura reduzida */
+  font-size: 12px; /* texto menor */
 }
 
-.form-container h4,
-.search-container h4 {
-  margin-bottom: 6px;
-  font-size: var(--font-size-md);
-}
-.search-container label,
-.custom-layer-control label {
-  font-size: 10px;
-  margin-bottom: 3px;
-  display: block;
-  cursor: pointer;
+#search-panel .panel-toggle-button {
+  padding: calc(var(--spacing-md) * 0.7);
+  font-size: 12px;
 }
 
-.form-container input,
-.form-container button,
-.form-container select,
-.search-container select,
-.search-container input[type="text"],
-.search-container button {
-  width: 100%;
-  padding: 4px;
-  margin-bottom: 5px;
-  font-size: 10px;
-  border: 1px solid #cbd5e1;
-  border-radius: var(--border-radius);
-  box-sizing: border-box;
+#search-panel .panel-content {
+  padding: calc(var(--spacing-sm) * 0.7) calc(var(--spacing-md) * 0.7);
 }
 
-.form-container button,
-.search-container button {
-  font-weight: bold;
-  border: none;
-  cursor: pointer;
-  background: var(--primary);
-  color: #fff;
-  transition: background 0.2s ease;
-  padding: 3px 6px;
-  font-size: 10px;
-}
-
-/* Botões Especiais */
-.btn-apagar {
-  background: #dc2626 !important;
-}
-.btn-apagar:hover {
-  background: #ef4444 !important;
-}
-.btn-ordenar {
-  background: var(--primary);
-}
-
-/* ================ */
-/* TOOLTIP / POPUP */
-/* ================ */
-.ol-tooltip {
-  position: relative;
-  background: rgba(255, 255, 255, .85);
-  padding: 2px 5px;
-  border-radius: 4px;
-  white-space: nowrap;
-  font-weight: 600;
-  color: var(--text-color);
-  border: 1px solid #ccc;
-  font-size: 10px;
-}
-.ol-popup {
-  background-color: white;
-  border: 1px solid #cccccc;
-  padding: 10px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-  border-radius: 5px;
-  min-width: 200px;
-}
-
-/* ================== */
-/* TABELA DE ATRIBUTOS */
-/* ================== */
-.table-attributes {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 10px;
-  font-size: var(--font-size-sm);
-}
-.table-attributes td {
-  padding: 5px 0;
-  vertical-align: top;
-}
-.table-attributes strong {
-  display: block;
-  margin-bottom: 3px;
-}
-.table-attributes .attribute-value {
+#search-panel input[type="text"],
+#search-panel select {
+  font-size: 12px;
   padding: 5px;
-  border: 1px solid #eee;
-  border-radius: 3px;
-  background-color: #f9f9f9;
-  display: block;
-  word-wrap: break-word;
 }
 
-/* ================ */
-/* LISTA DE CAMPOS  */
-/* ================ */
-.field-list {
-  list-style: none;
-  padding: 0;
-  margin: 10px 0;
-  max-height: 200px;
-  overflow-y: auto;
-  border: 1px solid #eee;
-  border-radius: 5px;
-  font-size: var(--font-size-sm);
+
+#customLayerControl {
+  bottom: var(--spacing-lg);
+  left: var(--spacing-lg);
+  width: 220px;
 }
-.field-list li {
-  padding: 6px 8px;
+
+/* --- Botão de Toggle do Painel --- */
+.panel-toggle-button {
+  width: 100%;
+  background-color: transparent;
+  color: var(--color-text);
+  border: none;
+  padding: var(--spacing-md);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #eee;
-}
-.field-list li:last-child {
-  border-bottom: none;
-}
-.field-list li button {
-  background-color: #dc2626;
-  color: white;
-  border: none;
-  border-radius: 3px;
-  padding: 2px 6px;
-  cursor: pointer;
-  font-size: var(--font-size-sm);
-  margin-left: 8px;
-  transition: background 0.2s ease;
-}
-.field-list li button:hover {
-  background-color: #ef4444;
+  border-bottom: 1px solid var(--color-border);
+  transition: background-color var(--transition-speed) ease;
 }
 
-/* =================== */
-/* TOOLTIP DE MEDIÇÃO */
-/* =================== */
-.ol-tooltip-measure {
-  background: rgba(255, 255, 255, 0.85);
-  color: black;
-  padding: 3px 6px;
-  border-radius: 4px;
+.panel-toggle-button:hover {
+    background-color: var(--color-bg);
+}
+
+.panel-toggle-button .icon {
+  transition: transform var(--transition-speed) ease-in-out;
+}
+
+/* --- Conteúdo do Painel --- */
+.panel-content {
+  padding: var(--spacing-sm) var(--spacing-md);
+  overflow-y: auto;
+  visibility: visible;
+  opacity: 1;
+  transition: all var(--transition-speed) ease-in-out;
+}
+
+/* --- Estado Colapsado --- */
+.ui-panel.collapsed .panel-content {
+  visibility: hidden;
+  opacity: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  max-height: 0;
+}
+
+.ui-panel.collapsed .panel-toggle-button {
+    border-bottom-color: transparent;
+}
+
+.ui-panel.collapsed .panel-toggle-button .icon {
+  transform: rotate(-90deg);
+}
+
+/* ==========================================================================
+   4. COMPONENTES DE FORMULÁRIO (Gerais e para o Popup de Atributos)
+   ========================================================================== */
+
+/* Estilo para o contêiner do popup (o 'element' do ol.Overlay) */
+.map-popup-content {
+  right: var(--spacing-lg);
+  bottom: calc(var(--spacing-lg) + 10px); /* abaixo do painel de pesquisa */
+  left: auto !important;
+  top: auto !important;
+  transform: none !important;
+  position: absolute !important;
+}
+
+/* Estilo para o conteúdo interno do popup (onde o formulário é injetado) */
+#map-popup-content-inner {
+  padding-top: 0; /* O header já cuidará da parte superior */
+  width: 300px;
+  height: 1000px;
+  padding-bottom: var(--spacing-lg); /* Padding para o botão Salvar */
+  overflow-y: auto; /* Permite rolagem se o conteúdo for muito grande */
+  max-height: calc(80vh - 40px); /* Ajuste com base na altura do botão de fechar */
+}
+
+/* Bloco de Seção dentro do formulário do popup */
+.map-popup-content .form-section {
+  background-color: var(--color-form-bg); /* Fundo cinza claro para as seções */
+  padding: var(--spacing-lg); /* Padding interno para o conteúdo da seção */
+  margin-top: 0;
+  border-bottom: 1px solid var(--color-border); /* Linha divisória entre seções */
+}
+
+/* Remove a borda inferior da última seção */
+.map-popup-content .form-section:last-of-type {
+  border-bottom: none;
+}
+
+/* Cabeçalho da seção do formulário no popup */
+.map-popup-content .form-section-header {
+  background-color: var(--color-header-blue);
+  color: var(--color-header-text);
+  padding: var(--spacing-md) var(--spacing-lg); /* Mais padding para o cabeçalho */
+  font-size: 16px;
+  font-weight: 700; /* Negrito como na imagem */
+  /* Margens negativas para o cabeçalho "sair" do padding da seção e preencher a largura */
+  margin: calc(-1 * var(--spacing-lg)) calc(-1 * var(--spacing-lg)) var(--spacing-lg) calc(-1 * var(--spacing-lg));
+  /* Remove border-radius superior, já que o .map-popup-content tem */
+  border-radius: 0; /* O canto arredondado geral será no .map-popup-content */
+}
+
+/* Ajusta o primeiro cabeçalho do popup para ter o border-radius superior do popup */
+.map-popup-content .form-section:first-of-type .form-section-header {
+    border-top-left-radius: var(--border-radius-md);
+    border-top-right-radius: var(--border-radius-md);
+}
+
+
+.form-group {
+    margin-bottom: var(--spacing-md);
+}
+
+label, .form-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-light);
+  margin-bottom: var(--spacing-xs);
+  display: block;
+}
+
+input[type="text"],
+select {
+  width: 100%;
+  padding: var(--spacing-sm);
+  font-size: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-sm);
+  background-color: var(--color-surface);
+  transition: border-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+  -webkit-appearance: none; /* Para remover a estilização padrão de alguns navegadores */
+  -moz-appearance: none;
+  appearance: none; /* Remove a seta padrão do select */
+}
+
+input[type="text"]:focus,
+select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-focus-ring);
+}
+
+/* Estilo para inputs preenchidos (se quiser simular o "readonly" da imagem) */
+input[type="text"][readonly],
+select[readonly] {
+  background-color: var(--color-input-filled-bg); /* Fundo cinza claro */
+  border-color: var(--color-input-filled-bg); /* Borda da mesma cor */
+  color: var(--color-text); /* Cor do texto padrão */
+  cursor: default; /* Cursor padrão */
+  box-shadow: var(--shadow-inset-light); /* Sombra interna sutil */
+}
+/* Para seletores, especificamente para a seta personalizada */
+select {
+  background-image: url('data:image/svg+xml;charset=UTF-8,%3Csvg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"%3E%3Cpath fill="%236b7280" d="M7 10l5 5 5-5z"/%3E%3C/svg%3E'); /* Seta SVG */
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 16px 16px;
+  padding-right: 30px; /* Adiciona espaço para a seta */
+}
+
+
+/* --- Checkbox e Radio para Camadas --- */
+#customLayerContent label {
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-xs) 0;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+#customLayerContent input {
+    margin-right: var(--spacing-sm);
+}
+
+/* --- Botões --- */
+.btn {
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: var(--border-radius-sm);
+  border: 1px solid transparent;
+  transition: background-color var(--transition-speed) ease, border-color var(--transition-speed) ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+}
+
+.btn-primary {
+  background-color: var(--color-primary);
+  color: var(--color-surface);
+}
+.btn-primary:hover {
+  background-color: var(--color-primary-hover);
+}
+
+.btn-danger {
+  background-color: var(--color-danger);
+  color: var(--color-surface);
+}
+.btn-danger:hover {
+  background-color: var(--color-danger-hover);
+}
+
+.btn-secondary {
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    border-color: var(--color-border);
+}
+.btn-secondary:hover {
+    background-color: var(--color-bg);
+}
+
+/* Ajuste para o botão Salvar Alterações dentro do popup */
+.map-popup-content .btn-save-changes {
+  margin-top: var(--spacing-lg); /* Espaço acima do botão */
+  width: auto; /* Deixa a largura ajustar ao conteúdo */
+  padding-left: var(--spacing-lg);
+  padding-right: var(--spacing-lg);
+  display: block; /* Para que o margin: auto funcione */
+  margin-left: auto;
+  margin-right: auto; /* Centraliza o botão */
+}
+
+/* ==========================================================================
+   5. COMPONENTES ESPECÍFICOS (Incluindo estilos para o popup OL)
+   ========================================================================== */
+/* --- Busca com Autocomplete --- */
+#sugestoes {
+  position: absolute;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  max-height: 150px;
+  overflow-y: auto;
+  z-index: 1001;
+  width: calc(100% - 2 * var(--spacing-md));
+  border-top: none;
+  border-radius: 0 0 var(--border-radius-sm) var(--border-radius-sm);
+  box-shadow: var(--shadow-md);
+}
+
+.sugestao-item {
+  padding: var(--spacing-sm) var(--spacing-md);
+  cursor: pointer;
+  font-size: 14px;
+}
+.sugestao-item:hover {
+  background-color: var(--color-primary);
+  color: var(--color-surface);
+}
+
+/* --- Tooltips de Medição do OpenLayers --- */
+.ol-tooltip {
+  position: relative;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: var(--border-radius-sm);
+  color: white;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: 12px;
   white-space: nowrap;
-  font-size: 11px;
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
-  pointer-events: none;
+  cursor: default;
+  user-select: none;
+  backdrop-filter: blur(2px);
+}
+.ol-tooltip-measure {
+  font-weight: bold;
 }
 .ol-tooltip-static {
   background-color: #ffcc33;
   color: black;
   border: 1px solid white;
 }
-.ol-tooltip-measure:before,
-.ol-tooltip-static:before {
-  border-top: 6px solid rgba(255, 255, 255, 0.85);
-  border-right: 6px solid transparent;
-  border-left: 6px solid transparent;
-  content: "";
-  position: absolute;
-  bottom: -6px;
-  margin-left: -7px;
-  left: 50%;
+
+/* Estilos para o botão de fechar do popup do OpenLayers */
+.ol-popup-closer {
+    text-decoration: none;
+    position: absolute;
+    top: 5px; /* Ajuste para centralizar verticalmente no header */
+    right: 8px; /* Ajuste para não colar na borda */
+    cursor: pointer;
+    font-size: 20px;
+    color: var(--color-header-text); /* Cor branca para o ícone */
+    z-index: 10; /* Garante que esteja acima do header */
+    width: 24px;
+    height: 24px;
+    line-height: 20px;
+    text-align: center;
+    border-radius: 50%; /* Faz o círculo */
+    background-color: rgba(255, 255, 255, 0.2); /* Fundo sutil */
+    transition: background-color 0.2s ease;
 }
-.ol-tooltip-static:before {
-  border-top-color: #ffcc33;
+.ol-popup-closer:after {
+    content: "✖"; /* Caractere 'X' */
+    display: block;
+    font-size: 16px;
+    line-height: 24px;
+}
+.ol-popup-closer:hover {
+    background-color: rgba(255, 255, 255, 0.4); /* Fundo mais forte no hover */
 }
 
-/* ============= */
-/* IMPRESSÃO    */
-/* ============= */
+
+/* ==========================================================================
+   6. MODO DE IMPRESSÃO
+   ========================================================================== */
+#printModeControls {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--color-surface);
+  padding: var(--spacing-lg);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 2000;
+  display: none;
+  text-align: center;
+  width: 280px;
+}
+#printModeControls p {
+    margin: 0 0 var(--spacing-md) 0;
+    font-weight: 500;
+}
+#printModeControls .btn {
+    margin-top: var(--spacing-sm);
+}
+
+#northArrowPrint {
+  position: absolute;
+  top: 30px;
+  right: 30px;
+  font-size: 30px;
+  font-weight: bold;
+  color: var(--color-text);
+  z-index: 100;
+  display: none;
+  text-shadow: 0 0 5px white;
+}
+
+.hidden-for-print {
+  display: none !important;
+}
+.visible-for-print {
+  display: block !important;
+}
+
+.ol-scale-line.visible-for-print {
+  position: absolute;
+  bottom: 30px;
+  left: 30px;
+  background: rgba(255, 255, 255, 0.7);
+  padding: var(--spacing-xs);
+  border-radius: var(--border-radius-sm);
+}
+
 @media print {
   @page {
     size: A4 portrait;
-    margin: 0 !important;
+    margin: 0;
   }
-  html, body {
-    height: 100% !important;
-    width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-    transform: none !important;
-  }
-  #map {
-    width: 210mm !important;
-    height: 297mm !important;
-    position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    transform: none !important;
-    border: none !important;
-    box-shadow: none !important;
-    margin: 0 !important;
-  }
-  .form-container,
-  .custom-layer-control,
-  .print-mode-controls,
-  .ol-zoom,
-  .ol-rotate,
-  .ol-attribution,
-  .ol-tooltip,
-  .ol-tooltip-help,
-  .ol-tooltip-measure,
-  .search-container {
-    display: none !important;
-  }
-  #northArrowPrint,
-  .ol-scale-line {
-    display: block !important;
-  }
-  .ol-scale-line {
-    bottom: 20px !important;
-    left: 20px !important;
-    right: auto !important;
-  }
-  #northArrowPrint {
-    top: 20px !important;
-    right: 20px !important;
-    left: auto !important;
-  }
-}
-
-/* ================ */
-/* PAINÉIS TOGGLE   */
-/* ================ */
-.toggle-button {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  background: var(--dark);
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 2px 6px;
-  font-size: 10px;
-  cursor: pointer;
-  z-index: 1001;
-}
-.toggle-button::after {
-  content: '\25BC';
-  display: inline-block;
-  margin-left: 4px;
-  transition: transform 0.3s;
-}
-.collapsed .toggle-button::after {
-  transform: rotate(-90deg);
-}
-
-.collapsible {
-  transition: max-height 0.3s ease, padding 0.3s ease;
-  overflow: hidden;
-  max-height: 500px;
-}
-.collapsed {
-  max-height: 22px !important;
-  padding-top: 4px !important;
-  padding-bottom: 0 !important;
-  overflow: hidden !important;
-}
-.collapsed *:not(.toggle-button) {
-  display: none !important;
-}
-.collapsed h4 {
-  display: inline-block !important;
-  margin: 0;
-  font-size: 11px;
-  color: #333;
-}
-
-@media (max-width: 480px) {
-  .form-container,
-  .search-container,
-  .custom-layer-control {
-    max-height: 22px;
-    padding-top: 4px;
+  html, body, #map {
+    width: 100%;
+    height: 100%;
     overflow: hidden;
   }
-  .form-container.collapsed,
-  .search-container.collapsed,
-  .custom-layer-control.collapsed {
-    max-height: 22px !important;
+  .ui-panel, .print-mode-controls, .mobile-map-controls, .ol-zoom, .ol-rotate, .ol-attribution, .map-popup-content {
+    display: none !important; /* Esconde o popup na impressão */
   }
+  #northArrowPrint, .ol-scale-line.visible-for-print {
+      display: block !important;
+  }
+}
+
+/* ==========================================================================
+   7. RESPONSIVIDADE (MOBILE)
+   ========================================================================== */
+@media (max-width: 768px) {
+  /* Esconde os painéis de desktop por padrão */
+  .ui-panel {
+    display: none;
+  }
+  /* Esconde o popup de atributos em telas menores para dar prioridade ao mapa, se necessário */
+  /* Se você quiser que o popup seja responsivo em mobile, ajuste ou remova esta regra */
+  .map-popup-content {
+    /* Pode ser necessário ajustar a largura máxima e altura para mobile */
+    /* Por exemplo: max-width: 90vw; left: 5vw; transform: translateX(0); */
+    /* Ou escondê-lo completamente: display: none !important; */
+    max-width: 90vw; /* Mais flexível em mobile */
+    left: 50% !important; /* Centraliza horizontalmente */
+    transform: translateX(-50%) !important;
+    top: auto !important; /* Remove top padrão */
+    bottom: calc(var(--spacing-sm) + 60px) !important; /* Posiciona acima da barra mobile */
+  }
+
+
+  /* Mostra o painel ativo, posicionado na parte inferior */
+  .ui-panel.mobile-active {
+    display: flex;
+    left: var(--spacing-sm);
+    right: var(--spacing-sm);
+    bottom: calc(var(--spacing-sm) + 60px); /* Acima da barra de controle */
+    top: auto;
+    width: auto;
+    max-height: 45vh; /* Limita a altura em modo mobile */
+  }
+
+  /* Barra de controle mobile */
+  .mobile-map-controls {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1500;
+    display: flex;
+    justify-content: space-around;
+    background-color: var(--color-surface);
+    padding: var(--spacing-sm) 0;
+    border-top: 1px solid var(--color-border);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .mobile-map-controls .btn {
+    width: auto;
+    flex-direction: column;
+    background: transparent;
+    border: none;
+    color: var(--color-text-light);
+    font-size: 10px;
+    padding: var(--spacing-xs);
+    border-radius: var(--border-radius-sm);
+  }
+  .mobile-map-controls .btn i {
+      font-size: 20px;
+      margin-bottom: var(--spacing-xs);
+  }
+
+  .mobile-map-controls .btn.active {
+      color: var(--color-primary);
+  }
+}
+
+/* Esconde a barra mobile em telas maiores */
+@media (min-width: 769px) {
+    .mobile-map-controls {
+        display: none;
+    }
 }
