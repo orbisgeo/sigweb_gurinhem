@@ -1,144 +1,482 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mapa Interativo com Visualização de Atributos (OpenLayers)</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa Interativo de Gurinhém</title>
 
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.15.1/css/ol.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" />
+    <!-- OpenLayers -->
+    <link rel="stylesheet" href="https://openlayers.org/en/v6.15.1/css/ol.css" type="text/css">
+    <script src="https://openlayers.org/en/v6.15.1/build/ol.js"></script>
 
-    <link rel="stylesheet" href="style.css" />
+    <!-- Proj4 para projeções customizadas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.7.5/proj4.js"></script>
+
+    <!-- JSTS para operações espaciais -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsts/2.6.1/jsts.min.js"></script>
+
+    <!-- SweetAlert2 para popups elegantes -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <!-- Google Fonts: Poppins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* ================== Reset Básico e Variáveis CSS ================== */
+        :root {
+            --primary-color: #007BFF;
+            --secondary-color: #6c757d;
+            --background-color: #f8f9fa;
+            --panel-bg: #ffffff;
+            --text-color: #333;
+            --border-color: #dee2e6;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --border-radius: 8px;
+            --spacing-sm: 8px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body, html {
+            height: 100%;
+            width: 100%;
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            overflow: hidden;
+        }
+
+        /* ================== Layout Principal ================== */
+        #app-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        #sidebar {
+            width: 320px;
+            background-color: var(--panel-bg);
+            box-shadow: var(--shadow);
+            z-index: 1001;
+            display: flex;
+            flex-direction: column;
+            transition: width 0.3s ease;
+        }
+
+        #map-container {
+            flex-grow: 1;
+            position: relative;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* ================== Estilos dos Painéis na Sidebar ================== */
+        .panel {
+            padding: var(--spacing-md);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .panel:last-child {
+            border-bottom: none;
+        }
+
+        .panel-header {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: var(--spacing-md);
+            color: var(--primary-color);
+            padding-bottom: var(--spacing-sm);
+            border-bottom: 2px solid var(--primary-color);
+        }
+
+        /* Painel de Ferramentas */
+        #tools-panel .tool-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--spacing-sm);
+        }
+
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--spacing-sm);
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            background-color: #fff;
+            color: var(--secondary-color);
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-color);
+            color: #fff;
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+        }
+
+        /* Painel de Busca */
+        #search-panel .form-group {
+            margin-bottom: var(--spacing-md);
+        }
+
+        #search-panel label {
+            display: block;
+            margin-bottom: var(--spacing-sm);
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        #search-panel select, #search-panel input {
+            width: 100%;
+            padding: 10px;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        #sugestoes {
+            border: 1px solid var(--border-color);
+            border-top: none;
+            max-height: 150px;
+            overflow-y: auto;
+            background: #fff;
+            border-radius: 0 0 var(--border-radius) var(--border-radius);
+        }
+
+        .sugestao-item {
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        .sugestao-item:hover {
+            background-color: var(--background-color);
+        }
+
+        #search-buttons {
+            display: flex;
+            gap: var(--spacing-sm);
+        }
+        
+        .btn-primary {
+             background-color: var(--primary-color);
+             color: #fff;
+             border: none;
+        }
+
+        /* Controle de Camadas */
+        #customLayerContent {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+        }
+
+        #customLayerContent label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+
+        #customLayerContent input[type="checkbox"],
+        #customLayerContent input[type="radio"] {
+            margin-right: 12px;
+            accent-color: var(--primary-color);
+            width: 1.15em;
+            height: 1.15em;
+        }
+        
+        /* ================== Estilos do Mapa e Overlays ================== */
+        .ol-zoom, .ol-rotate, .ol-attribution {
+            box-shadow: var(--shadow);
+            border-radius: var(--border-radius);
+        }
+
+        .ol-scale-line {
+            background: rgba(0, 60, 136, 0.7);
+            border-radius: 4px;
+            padding: 4px 8px;
+        }
+
+        .ol-scale-line-inner {
+            color: #fff;
+            border-color: #fff;
+        }
+        
+        .ol-tooltip {
+            position: relative;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 4px;
+            color: white;
+            padding: 4px 8px;
+            opacity: 1;
+            white-space: nowrap;
+            font-size: 12px;
+        }
+        .ol-tooltip-measure {
+            opacity: 1;
+            font-weight: bold;
+        }
+        .ol-tooltip-static {
+            background-color: #ffcc33;
+            color: black;
+            border: 1px solid white;
+        }
+        .ol-tooltip-measure::before,
+        .ol-tooltip-static::before {
+            border-top: 6px solid rgba(0, 0, 0, 0.5);
+            border-right: 6px solid transparent;
+            border-left: 6px solid transparent;
+            content: "";
+            position: absolute;
+            bottom: -6px;
+            margin-left: -7px;
+            left: 50%;
+        }
+        .ol-tooltip-static::before {
+            border-top-color: #ffcc33;
+        }
+
+        /* ================== Estilo do Popup do Mapa ================== */
+        #map-popup {
+            background: var(--panel-bg);
+            box-shadow: var(--shadow);
+            border-radius: var(--border-radius);
+            padding: 0;
+            width: 350px;
+            max-height: 450px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .popup-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: var(--spacing-sm) var(--spacing-md);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .popup-title {
+            font-weight: 600;
+        }
+
+        #popup-closer {
+            text-decoration: none;
+            color: white;
+            font-size: 1.5rem;
+            line-height: 1;
+        }
+        #popup-closer:hover {
+            color: #e0e0e0;
+        }
+
+        #popup-content {
+            padding: var(--spacing-md);
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+        
+        .form-group {
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .form-group label {
+            font-size: 0.8rem;
+            color: #666;
+            margin-bottom: 4px;
+            display: block;
+            font-weight: 500;
+        }
+        
+        .form-group input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: #f4f4f4; /* Readonly background */
+            font-size: 0.9rem;
+            color: #333;
+        }
+        
+        .btn-save-changes {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: background-color 0.2s;
+            width: 100%;
+            margin-top: var(--spacing-md);
+        }
+        .btn-save-changes:hover {
+            background-color: #218838;
+        }
+
+        /* ================== Modo de Impressão ================== */
+        #printModeControls {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--panel-bg);
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            z-index: 1050;
+            display: none;
+            gap: 10px;
+        }
+        
+        #northArrowPrint {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 80px;
+            height: 80px;
+            display: none;
+            z-index: 1000;
+        }
+
+        @media print {
+            body {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            #sidebar, #printModeControls {
+                display: none !important;
+            }
+            #map-container {
+                border: 2px solid #000;
+                height: 100vh;
+            }
+            .ol-scale-line {
+                background: none;
+                bottom: 30px;
+            }
+             .ol-scale-line-inner {
+                border: 2px solid #000;
+                color: #000;
+                font-weight: bold;
+            }
+        }
+
+        .hidden-for-print {
+            display: none !important;
+        }
+
+        body.print-mode-active #sidebar {
+            width: 0;
+            overflow: hidden;
+        }
+        
+        body.print-mode-active .ol-zoom,
+        body.print-mode-active .ol-rotate,
+        body.print-mode-active .ol-attribution {
+            display: none;
+        }
+    </style>
 </head>
 <body>
 
-    <div id="map"></div>
+    <div id="app-container">
+        <!-- Sidebar com Ferramentas, Busca e Camadas -->
+        <aside id="sidebar">
+            <!-- Painel de Ferramentas -->
+            <div id="tools-panel" class="panel">
+                <h2 class="panel-header">Ferramentas</h2>
+                <div class="tool-buttons">
+                    <button class="btn" onclick="toggleMeasureDistance()">📏 Medir Distância</button>
+                    <button class="btn" onclick="toggleMeasureArea()">📐 Medir Área</button>
+                    <button class="btn" onclick="clearMeasurements()">❌ Limpar Medidas</button>
+                    <button class="btn" onclick="mostrarOpcoesExportacao()">💾 Exportar KML</button>
+                    <button class="btn" onclick="activatePrintMode()">🖨️ Modo Impressão</button>
+                </div>
+            </div>
 
-    <div id="map-popup" class="map-popup-content">
-        <a href="#" id="map-popup-closer" class="ol-popup-closer"></a>
-        <div id="map-popup-content-inner"></div>
+            <!-- Painel de Busca -->
+            <div id="search-panel" class="panel">
+                <h2 class="panel-header">Buscar Feição</h2>
+                <div class="form-group">
+                    <label for="camadaSelect">Selecione a Camada:</label>
+                    <select id="camadaSelect"></select>
+                </div>
+                <div class="form-group">
+                    <label for="campoSelect">Selecione o Campo:</label>
+                    <select id="campoSelect"></select>
+                </div>
+                <div class="form-group">
+                    <label for="valorBusca">Digite o Valor:</label>
+                    <input type="text" id="valorBusca" placeholder="Digite para buscar...">
+                    <div id="sugestoes" style="display: none;"></div>
+                </div>
+                <div id="search-buttons">
+                    <button class="btn btn-primary" onclick="buscarFeicao()">🔍 Buscar</button>
+                    <button class="btn" onclick="clearSearchHighlight()">Limpar Busca</button>
+                </div>
+            </div>
+            
+            <!-- Painel de Camadas -->
+            <div id="customLayerControl" class="panel">
+                <h2 class="panel-header">Gerenciar Camadas</h2>
+                <div id="customLayerContent">
+                    <!-- As camadas serão adicionadas aqui pelo JS -->
+                </div>
+            </div>
+        </aside>
+
+        <!-- Container do Mapa -->
+        <main id="map-container">
+            <div id="map"></div>
+            
+            <!-- Elementos para o Modo de Impressão -->
+            <div id="printModeControls">
+                 <button class="btn" onclick="triggerPrint()">Imprimir Mapa</button>
+                 <button class="btn" onclick="deactivatePrintMode()">Sair do Modo Impressão</button>
+            </div>
+            <img id="northArrowPrint" src="https://image.flaticon.com/icons/png/512/107/107565.png" alt="Seta Norte">
+
+        </main>
     </div>
 
-
-    <div id="tools-panel" class="ui-panel">
-        <button class="panel-toggle-button" onclick="togglePanel('tools-panel')">
-            <span><i class="fas fa-wrench"></i> Ferramentas</span>
-            <i class="fas fa-chevron-down icon"></i>
-        </button>
-        <div class="panel-content">
-            <button class="btn btn-secondary" onclick="mapFunctions.toggleMeasureDistance()"><i class="fas fa-ruler-horizontal"></i> Medir Distância</button>
-            <button class="btn btn-secondary" onclick="mapFunctions.toggleMeasureArea()"><i class="fas fa-draw-polygon"></i> Medir Área</button>
-            <button class="btn btn-secondary" onclick="mapFunctions.clearMeasurements()"><i class="fas fa-trash-alt"></i> Limpar Medições</button>
-            <hr style="border: 0; border-top: 1px solid var(--color-border); margin: var(--spacing-sm) 0;">
-            <button class="btn btn-secondary" onclick="mapFunctions.mostrarOpcoesExportacao()"><i class="fas fa-file-export"></i> Exportar KML</button>
-            <button class="btn btn-secondary" onclick="mapFunctions.activatePrintMode()"><i class="fas fa-print"></i> Imprimir Mapa</button>
+    <!-- Popup do Mapa -->
+    <div id="map-popup" class="ol-popup">
+        <div class="popup-header">
+            <span id="popup-title" class="popup-title">Informações</span>
+            <a href="#" id="popup-closer" class="ol-popup-closer">&times;</a>
         </div>
+        <div id="popup-content"></div>
     </div>
 
-    <div id="customLayerControl" class="ui-panel collapsed">
-        <button class="panel-toggle-button" onclick="togglePanel('customLayerControl')">
-            <span><i class="fas fa-layer-group"></i> Camadas</span>
-            <i class="fas fa-chevron-down icon"></i>
-        </button>
-        <div class="panel-content" id="customLayerContent">
-            </div>
-    </div>
-
-    <div id="search-panel" class="ui-panel">
-        <button class="panel-toggle-button" onclick="togglePanel('search-panel')">
-            <span><i class="fas fa-search"></i> Buscar Feição</span>
-            <i class="fas fa-chevron-down icon"></i>
-        </button>
-        <div class="panel-content">
-            <div class="form-group">
-                <label for="camadaSelect" class="form-label">Camada</label>
-                <select id="camadaSelect"></select>
-            </div>
-            <div class="form-group">
-                <label for="campoSelect" class="form-label">Campo</label>
-                <select id="campoSelect"></select>
-            </div>
-            <div class="form-group">
-                <label for="valorBusca" class="form-label">Valor</label>
-                <input type="text" id="valorBusca" placeholder="Digite para buscar..." autocomplete="off">
-                <div id="sugestoes"></div>
-            </div>
-            <button class="btn btn-primary" onclick="mapFunctions.buscarFeicao()"><i class="fas fa-search"></i> Buscar</button>
-            <button class="btn btn-danger" onclick="mapFunctions.clearSearchHighlight()" style="margin-top: var(--spacing-sm);"><i class="fas fa-times"></i> Limpar</button>
-        </div>
-    </div>
-
-    <div id="printModeControls">
-        <p>Ajuste o mapa e clique para imprimir</p>
-        <button class="btn btn-primary" onclick="mapFunctions.triggerPrint()"><i class="fas fa-print"></i> Imprimir Agora</button>
-        <button class="btn btn-danger" onclick="mapFunctions.deactivatePrintMode()"><i class="fas fa-times"></i> Cancelar</button>
-    </div>
-    <div id="northArrowPrint">↑ N</div>
-
-    <div class="mobile-map-controls">
-        <button class="btn" onclick="toggleMobilePanel('search-panel', this)">
-            <i class="fas fa-search"></i>
-            <span>Buscar</span>
-        </button>
-        <button class="btn" onclick="toggleMobilePanel('tools-panel', this)">
-            <i class="fas fa-wrench"></i>
-            <span>Ferramentas</span>
-        </button>
-        <button class="btn" onclick="toggleMobilePanel('customLayerControl', this)">
-            <i class="fas fa-layer-group"></i>
-            <span>Camadas</span>
-        </button>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.15.1/build/ol.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/proj4@2.9.2/dist/proj4.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jsts@2.0.0/dist/jsts.min.js"></script>
-
-    <script src="script.js"></script>
 
     <script>
-        // Função para alternar painéis no modo DESKTOP
-        function togglePanel(id) {
-            const panel = document.getElementById(id);
-            if (panel) {
-                panel.classList.toggle('collapsed');
-            }
-        }
-
-        // Função para alternar painéis no modo MOBILE
-        function toggleMobilePanel(panelId, buttonElement) {
-            const targetPanel = document.getElementById(panelId);
-            if (!targetPanel) return;
-
-            const allPanels = document.querySelectorAll('.ui-panel');
-            const allMobileButtons = document.querySelectorAll('.mobile-map-controls .btn');
-
-            const isAlreadyActive = targetPanel.classList.contains('mobile-active');
-
-            // Primeiro, reseta todos os painéis e botões
-            allPanels.forEach(p => p.classList.remove('mobile-active'));
-            allMobileButtons.forEach(b => b.classList.remove('active'));
-
-            // Se o painel clicado não estava ativo, ativa-o (e o seu botão)
-            if (!isAlreadyActive) {
-                targetPanel.classList.add('mobile-active');
-                buttonElement.classList.add('active');
-            }
-            // Se já estava ativo, a ação de reset acima já o fechou.
-        }
-
-        // --- Configuração do Overlay do OpenLayers para o Popup ---
-        // Estes elementos devem estar disponíveis no DOM quando o script é executado
+        // Inicialização do Overlay do Popup para OpenLayers
         const container = document.getElementById('map-popup');
-        const content = document.getElementById('map-popup-content-inner'); // O div interno para o conteúdo
-        const closer = document.getElementById('map-popup-closer');
+        const content = document.getElementById('popup-content');
+        const closer = document.getElementById('popup-closer');
 
-        // Cria o Overlay. A variável 'map' (ol.Map) deve ser inicializada em script.js
-        // e ser acessível globalmente ou ser passada para uma função que crie e adicione o overlay.
         const overlay = new ol.Overlay({
             element: container,
             autoPan: {
@@ -146,25 +484,831 @@
                     duration: 250,
                 },
             },
-            offset: [0, -15], // Ajusta a posição do popup acima do ponto clicado
-            positioning: 'bottom-center' // Posiciona a base do popup no ponto clicado
         });
-        
-        // **IMPORTANTE**: A linha `map.addOverlay(overlay);` DEVE ESTAR NO SEU `script.js`
-        // APÓS a inicialização do seu objeto `map`.
 
-        // Evento para fechar o popup ao clicar no 'X'
-        closer.onclick = function() {
-            overlay.setPosition(undefined); // Esconde o popup
-            closer.blur(); // Remove o foco do botão
-            return false; // Previne o comportamento padrão do link
+        closer.onclick = function () {
+            overlay.setPosition(undefined);
+            closer.blur();
+            return false;
         };
-
-        // NOTA: A lógica para abrir o popup e preencher 'content.innerHTML'
-        // com os atributos da feição DEVE ESTAR NO SEU 'script.js',
-        // geralmente dentro de um 'map.on('singleclick', function(evt) { ... });'
-        // onde você itera sobre as feições no pixel clicado.
     </script>
+    
+    <!-- SEU SCRIPT JAVASCRIPT EMBUTIDO -->
+    <script>
+        /* ================= Firebase ================= */
+        const firebaseConfig = {
+            apiKey: "AIzaSyDxxxxxxx", // Substitua PELA SUA CHAVE REAL DA API DO FIREBASE
+            authDomain: "ruas-gurinhem.firebaseapp.com",
+            projectId: "ruas-gurinhem"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
 
+        // ====================================================================
+        // Habilitar Persistência Offline do Firestore.
+        // ====================================================================
+        db.enablePersistence()
+            .then(() => {
+                console.log("Persistência Offline do Firestore habilitada com sucesso!");
+                initializeMapAndLayers();
+            })
+            .catch((err) => {
+                if (err.code === 'failed-precondition') {
+                    console.warn("Múltiplas abas abertas, persistência offline não pode ser habilitada. Funcionará online.");
+                } else if (err.code === 'unimplemented') {
+                    console.warn("O navegador atual não suporta todos os recursos para persistência offline.");
+                } else {
+                    console.error("Erro ao habilitar persistência offline:", err);
+                }
+                initializeMapAndLayers();
+            });
+
+        // ====================================================================
+        // EXPOSIÇÃO DE FUNÇÕES GLOBAIS PARA O HTML
+        // ====================================================================
+        let mapFunctions = {};
+
+        window.toggleMeasureDistance = () => mapFunctions.toggleMeasureDistance();
+        window.toggleMeasureArea = () => mapFunctions.toggleMeasureArea();
+        window.clearMeasurements = () => mapFunctions.clearMeasurements();
+        window.activatePrintMode = () => mapFunctions.activatePrintMode();
+        window.triggerPrint = () => mapFunctions.triggerPrint();
+        window.deactivatePrintMode = () => mapFunctions.deactivatePrintMode();
+        window.mostrarOpcoesExportacao = () => mapFunctions.mostrarOpcoesExportacao();
+        window.buscarFeicao = () => mapFunctions.buscarFeicao();
+        window.clearSearchHighlight = () => mapFunctions.clearSearchHighlight();
+
+        // **IMPORTANTE**: Garanta que 'overlay', 'content' e 'closer' sejam acessíveis globalmente
+        // ou passados como parâmetros se initializeMapAndLayers não for a primeira a ser chamada
+        // e eles forem definidos no script do HTML.
+        // No setup atual com o HTML fornecido, eles são globais.
+
+        // Função principal para inicializar o mapa e carregar as camadas
+        function initializeMapAndLayers() {
+            /* ================= Variáveis e Configurações Globais do Mapa ================= */
+            const osmLayer = new ol.layer.Tile({
+                title: "🗺️ OpenStreetMap",
+                type: 'base',
+                source: new ol.source.OSM(),
+                visible: true
+            });
+
+            const sateliteLayer = new ol.layer.Tile({
+                title: "🛰️ Satélite MapTiler",
+                type: 'base',
+                source: new ol.source.XYZ({
+                    url: 'https://api.maptiler.com/maps/hybrid/{z}/{x}/{y}.jpg?key=o9sqJVKN8wxu8WXujuRl',
+                    tileSize: 512,
+                }),
+                visible: false
+            });
+
+            const emptyLayer = new ol.layer.Tile({
+                title: "🚫 Sem Base",
+                type: 'base',
+                source: new ol.source.TileDebug({
+                    projection: 'EPSG:3857',
+                }),
+                visible: false
+            });
+
+            proj4.defs("EPSG:31985", "+proj=utm +zone=25 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs");
+            ol.proj.proj4.register(proj4);
+
+            const extentDroneImage = [231844.66068941046, 9210570.410580005, 232802.90551243777, 9211417.585585851];
+            const urlDroneImage = 'https://github.com/orbisgeo/DRONE-MAP/blob/main/rib_transparente.png?raw=true';
+
+            const droneImageLayer = new ol.layer.Image({
+                title: "📸 Imagem de Drone",
+                type: 'overlay',
+                source: new ol.source.ImageStatic({
+                    url: urlDroneImage,
+                    projection: 'EPSG:31985',
+                    imageExtent: extentDroneImage,
+                }),
+                opacity: 1.0,
+                visible: true
+            });
+
+            const scaleLineControl = new ol.control.ScaleLine({
+                units: 'metric',
+                bar: true,
+                steps: 4,
+                text: true,
+                minWidth: 140
+            });
+
+            const map = new ol.Map({
+                target: 'map',
+                layers: [osmLayer, sateliteLayer, emptyLayer, droneImageLayer],
+                view: new ol.View({
+                    center: ol.proj.fromLonLat([-35.42, -7.12]),
+                    zoom: 16,
+                    maxZoom: 28,
+                    minZoom: 1,
+                    projection: 'EPSG:3857'
+                }),
+                controls: ol.control.defaults().extend([
+                    scaleLineControl,
+                    new ol.control.ZoomSlider()
+                ])
+            });
+
+            // Adiciona o overlay do popup ao mapa AQUI
+            if (typeof overlay !== 'undefined') { // Garante que a variável 'overlay' do HTML exista
+                map.addOverlay(overlay);
+            } else {
+                console.error("Variável 'overlay' não encontrada. Verifique se o script do HTML foi carregado corretamente.");
+            }
+
+
+            const transformedExtentDrone = ol.proj.transformExtent(extentDroneImage, 'EPSG:31985', 'EPSG:3857');
+            map.getView().fit(transformedExtentDrone, {
+                size: map.getSize(),
+                padding: [50, 50, 50, 50],
+                duration: 1500
+            });
+
+            // ====================================================================
+            // Referências aos elementos da UI
+            // ====================================================================
+            const toolsPanel = document.getElementById('tools-panel');
+            const searchPanel = document.getElementById('search-panel');
+            const layerControlPanel = document.getElementById('customLayerControl');
+            const layerContentContainer = document.getElementById('customLayerContent');
+
+            const printModeControls = document.getElementById('printModeControls');
+            const northArrowPrint = document.getElementById('northArrowPrint');
+
+            const olControlsToHide = [
+                document.querySelector('.ol-zoom'),
+                document.querySelector('.ol-rotate'),
+                document.querySelector('.ol-attribution'),
+            ].filter(Boolean);
+
+            // Popula o controle de camadas customizado
+            map.getLayers().forEach(layer => {
+                const title = layer.get('title');
+                if (!title) return; // Pula camadas sem título
+
+                const label = document.createElement('label');
+                const input = document.createElement('input');
+                input.type = layer.get('type') === 'base' ? 'radio' : 'checkbox';
+
+                if (input.type === 'radio') {
+                    input.name = 'baseLayer';
+                    input.value = title;
+                    input.checked = layer.getVisible();
+                    input.onchange = () => {
+                        map.getLayers().forEach(l => {
+                            if (l.get('type') === 'base') {
+                                l.setVisible(l.get('title') === title);
+                            }
+                        });
+                    };
+                } else {
+                    input.checked = layer.getVisible();
+                    input.onchange = () => layer.setVisible(input.checked);
+                }
+
+                label.appendChild(input);
+                label.appendChild(document.createTextNode(' ' + title));
+                layerContentContainer.appendChild(label);
+            });
+
+            /* ================= Camadas GeoData (OpenLayers) ================= */
+            // =================================================================
+            // ===== INÍCIO DA ALTERAÇÃO: Visibilidade e Estilos Padrão =========
+            // =================================================================
+            const camadas = {
+
+
+
+
+
+                rodovia: { nome: "Rodovias", cor: "#FF4500", layer: null, source: null, visible: false },
+                predios_publicos_PMG: { nome: "Prédios Públicos", tipo: "ponto", cor: "#000080", layer: null, source: null, visible: true },
+                ruas_nomeadas: { nome: "Ruas", cor: "#A52A2A", layer: null, source: null, visible: false },
+                corpos_hidricos_gr: { nome: "Corpos Hídricos", cor: "#4682B4", layer: null, source: null, visible: false },
+                lotes_rib: { nome: "Lotes Ribeirão", cor: "#D2B48C", layer: null, source: null, visible: false },
+                QUADRAS_GR: { nome: "Quadras", cor: "#BDB76B", layer: null, source: null, visible: true },
+                BAIRROS_GR: { nome: "Bairros", cor: "#8A2BE2", layer: null, source: null, visible: false },
+                ZONA_URBANA: { nome: "Zona Urbana", cor: "#8FBC8F", layer: null, source: null, visible: false },
+                zona_de_expansao: { nome: "Zona de Expansao", cor: "#DAA520", layer: null, source: null, visible: false }
+
+            };
+            // =================================================================
+            // ===== FIM DA ALTERAÇÃO ==========================================
+            // =================================================================
+
+            let selectedFeature = null;
+            let selectedFeatureId = null;
+            const featureIndex = {};
+            let drawInteraction;
+            let modifyInteraction;
+
+            // Variáveis de Medição
+            let measureDraw, measureSource, measureLayer, helpTooltipElement, helpTooltip, measureTooltipElement, measureTooltip, continuePolygon, continueLine;
+
+            const jstsOlParser = new jsts.io.OL3Parser();
+
+            // --- Estilos OpenLayers ---
+            function getPolygonStyle(color, weight = 1, opacity = 0.5, text = '') {
+                let fillColorArray = ol.color.fromString(String(color) || getRandomColor());
+                fillColorArray[3] = opacity;
+                return new ol.style.Style({
+                    stroke: new ol.style.Stroke({ color: '#000000', width: weight }),
+                    fill: new ol.style.Fill({ color: fillColorArray }),
+                    text: text ? getTextStyle(text) : undefined
+                });
+            }
+
+            function getPointStyle(color, radius = 6, text = '') {
+                return new ol.style.Style({
+                    image: new ol.style.Circle({
+                        fill: new ol.style.Fill({ color: String(color) }),
+                        stroke: new ol.style.Stroke({ color: '#fff', width: 1 }),
+                        radius: radius
+                    }),
+                    text: text ? getTextStyle(text) : undefined
+                });
+            }
+
+            function getTextStyle(text) {
+                return new ol.style.Text({
+                    font: 'bold 12px "Poppins", "Open Sans", "Arial Unicode MS", "sans-serif"',
+                    fill: new ol.style.Fill({ color: '#000' }),
+                    stroke: new ol.style.Stroke({ color: '#fff', width: 3 }),
+                    text: text,
+                    overflow: true // Garante que o rótulo seja renderizado
+                });
+            }
+
+            async function carregarCamada(key) {
+                const cfg = camadas[key];
+                const ref = db.collection("GeoData").doc(key).collection("features");
+                const snap = await ref.get();
+
+                const features = [];
+                snap.forEach(doc => {
+                    const dados = doc.data();
+                    const geojson = JSON.parse(dados.geometry);
+                    const props = dados.properties || {};
+                    const docId = doc.id;
+
+                    const format = new ol.format.GeoJSON();
+                    const feature = format.readFeature(geojson, {
+                        dataProjection: 'EPSG:4326',
+                        featureProjection: 'EPSG:3857'
+                    });
+                    feature.setId(docId);
+                    feature.setProperties(props);
+
+                    const cleanProps = {};
+                    for (const pKey in props) {
+                        if (pKey !== 'geometry' && pKey !== 'id' && pKey !== 'bbox' && pKey !== 'style') {
+                            cleanProps[pKey] = props[pKey];
+                        }
+                    }
+                    featureIndex[docId] = { feature: feature, camada: key, props: cleanProps };
+
+                    // =================================================================
+                    // ===== INÍCIO DA ALTERAÇÃO: Lógica de Estilo Customizada =========
+                    // =================================================================
+                    let featureStyle;
+                    // Tenta encontrar um campo de rótulo comum
+                    const labelField = props.nome || props.name || props.NOME || props.NM_BAIRRO;
+
+                    if (key === 'BAIRROS_GR') {
+                        // Estilo para Bairros: sem preenchimento, contorno roxo e rótulo
+                        featureStyle = new ol.style.Style({
+                            stroke: new ol.style.Stroke({ color: cfg.cor, width: 2.5 }),
+                            fill: new ol.style.Fill({ color: 'rgba(0, 0, 0, 0)' }), // Preenchimento transparente
+                            text: getTextStyle(labelField || '') // Usa o nome do bairro como rótulo
+                        });
+                    } else if (key === 'predios_publicos_PMG') {
+                        // Estilo para Prédios Públicos: ponto com rótulo fixo
+                        featureStyle = getPointStyle(cfg.cor, 7, labelField || '');
+                    } else {
+                        // Lógica de estilo padrão para as outras camadas
+                        const styleFunction = cfg.tipo === "ponto" ? getPointStyle : getPolygonStyle;
+                        let labelText = '';
+                        if (props.inscricao_imobiliaria) {
+                            labelText = props.inscricao_imobiliaria;
+                        } else if (props.ordem !== undefined && props.ordem !== null) {
+                            labelText = String(props.ordem);
+                        }
+                        featureStyle = styleFunction(cfg.cor, undefined, undefined, labelText);
+                    }
+                    feature.setStyle(featureStyle);
+                    // =================================================================
+                    // ===== FIM DA ALTERAÇÃO ==========================================
+                    // =================================================================
+
+                    features.push(feature);
+                });
+
+                cfg.source = new ol.source.Vector({ features: features });
+                cfg.layer = new ol.layer.Vector({
+                    title: cfg.nome,
+                    source: cfg.source,
+                    renderBuffer: 200,
+                    visible: cfg.visible // Define a visibilidade inicial da camada
+                });
+
+                map.addLayer(cfg.layer);
+
+                const label = document.createElement('label');
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.checked = cfg.visible; // Sincroniza o checkbox com a visibilidade inicial
+                checkbox.onchange = () => cfg.layer.setVisible(checkbox.checked);
+                label.appendChild(checkbox);
+                label.appendChild(document.createTextNode(' ' + cfg.nome));
+                layerContentContainer.appendChild(label);
+            }
+
+            Object.keys(camadas).forEach(carregarCamada);
+
+            const select = new ol.interaction.Select({
+                style: new ol.style.Style({
+                    stroke: new ol.style.Stroke({ color: '#f00', width: 3 }),
+                    fill: new ol.style.Fill({ color: 'rgba(255,0,0,0.2)' }),
+                    image: new ol.style.Circle({
+                        radius: 8,
+                        fill: new ol.style.Fill({ color: '#f00' }),
+                        stroke: new ol.style.Stroke({ color: '#fff', width: 2 })
+                    })
+                }),
+                layers: (layer) => Object.values(camadas).some(cfg => cfg.layer === layer)
+            });
+            map.addInteraction(select);
+
+            select.on('select', (event) => {
+                selectedFeature = event.selected.length > 0 ? event.selected[0] : null;
+                selectedFeatureId = selectedFeature ? selectedFeature.getId() : null;
+            });
+
+            let currentSearchHighlightFeature = null;
+
+            map.on('click', async (event) => {
+                // Verifica se o clique foi no popup. Se sim, não faz nada para evitar recursão ou fechamento indesejado.
+                const clickedElement = document.getElementById('map-popup');
+                if (clickedElement && clickedElement.contains(event.originalEvent.target)) {
+                    return;
+                }
+
+                const feature = map.forEachFeatureAtPixel(event.pixel, (feature, layer) => {
+                    // Ignora a feature de highlight de busca se clicada novamente
+                    if (feature === currentSearchHighlightFeature) return null;
+                    return feature;
+                });
+
+                if (feature) {
+                    const featureId = feature.getId();
+                    const camadaKey = Object.keys(camadas).find(key => camadas[key].layer && camadas[key].layer.getSource().getFeatureById(featureId));
+                    if (!camadaKey) {
+                        overlay.setPosition(undefined);
+                        return;
+                    }
+
+                    const featureProps = featureIndex[featureId]?.props || {};
+                    
+                    let popupHtml = '<form>'; // Inicia um formulário
+
+                    // Itera sobre todas as propriedades da feição
+                    for (const key in featureProps) {
+                        // Garante que a propriedade pertence ao objeto e não ao seu protótipo
+                        if (Object.prototype.hasOwnProperty.call(featureProps, key)) {
+                            const value = featureProps[key] !== null && featureProps[key] !== undefined ? featureProps[key] : '';
+                            
+                            popupHtml += `
+                                <div class="form-group">
+                                    <label for="prop_${key}">${key}</label>
+                                    <input type="text" id="prop_${key}" name="${key}" value="${String(value).replace(/"/g, '&quot;')}" readonly>
+                                </div>
+                            `;
+                        }
+                    }
+
+                    popupHtml += '<button type="button" class="btn-save-changes">Salvar Alterações</button>';
+                    popupHtml += '</form>'; // Fecha o formulário
+
+                    document.getElementById('popup-title').innerText = `Atributos da Feição: ${featureId}`;
+
+                    if (typeof content !== 'undefined') {
+                        content.innerHTML = popupHtml;
+                        overlay.setPosition(event.coordinate);
+                    } else {
+                         console.error("Variável 'content' não encontrada.");
+                    }
+
+                } else {
+                    if (typeof overlay !== 'undefined') {
+                        overlay.setPosition(undefined);
+                    }
+                }
+            });
+
+
+            /* ==================== Medição de Distância e Área ==================== */
+            mapFunctions.addInteraction = function(type) {
+                mapFunctions.clearMeasurements();
+
+                measureSource = new ol.source.Vector();
+                measureLayer = new ol.layer.Vector({
+                    source: measureSource,
+                    style: new ol.style.Style({
+                        fill: new ol.style.Fill({ color: 'rgba(255, 255, 255, 0.2)' }),
+                        stroke: new ol.style.Stroke({ color: '#ffcc33', width: 3 }),
+                        image: new ol.style.Circle({
+                            radius: 7,
+                            fill: new ol.style.Fill({ color: '#ffcc33' })
+                        })
+                    })
+                });
+                map.addLayer(measureLayer);
+
+                measureDraw = new ol.interaction.Draw({
+                    source: measureSource,
+                    type: type,
+                    style: new ol.style.Style({
+                        fill: new ol.style.Fill({ color: 'rgba(255, 255, 255, 0.2)' }),
+                        stroke: new ol.style.Stroke({ color: 'rgba(0, 0, 0, 0.5)', lineDash: [10, 10], width: 2 }),
+                        image: new ol.style.Circle({
+                            radius: 5,
+                            stroke: new ol.style.Stroke({ color: 'rgba(0, 0, 0, 0.7)' }),
+                            fill: new ol.style.Fill({ color: 'rgba(255, 255, 255, 0.2)' })
+                        })
+                    })
+                });
+                map.addInteraction(measureDraw);
+
+                createMeasureTooltip();
+                createHelpTooltip();
+                map.on('pointermove', mapFunctions.pointerMoveHandler);
+
+                let listener;
+                measureDraw.on('drawstart', function(evt) {
+                    let sketch = evt.feature;
+                    measureTooltipElement.innerHTML = '';
+                    
+                    listener = sketch.getGeometry().on('change', function(evt) {
+                        let geom = evt.target;
+                        let output;
+                        if (geom instanceof ol.geom.Polygon) {
+                            output = mapFunctions.formatArea(geom);
+                        } else if (geom instanceof ol.geom.LineString) {
+                            output = mapFunctions.formatLength(geom);
+                        }
+                        measureTooltipElement.innerHTML = output;
+                        measureTooltip.setPosition(geom.getLastCoordinate());
+                    });
+                });
+
+                measureDraw.on('drawend', function(evt) {
+                    measureTooltipElement.className = 'ol-tooltip ol-tooltip-static';
+                    measureTooltip.setOffset([0, -7]);
+                    ol.Observable.unByKey(listener);
+                    
+                    // Cleanup
+                    map.un('pointermove', mapFunctions.pointerMoveHandler);
+                    if (helpTooltipElement) {
+                        helpTooltipElement.parentElement.removeChild(helpTooltipElement);
+                        helpTooltipElement = null;
+                    }
+                    map.removeOverlay(helpTooltip);
+                    map.removeInteraction(measureDraw);
+                });
+            };
+
+            function createHelpTooltip() {
+                if (helpTooltipElement) {
+                    helpTooltipElement.parentElement.removeChild(helpTooltipElement);
+                }
+                helpTooltipElement = document.createElement('div');
+                helpTooltipElement.className = 'ol-tooltip';
+                helpTooltip = new ol.Overlay({
+                    element: helpTooltipElement,
+                    offset: [15, 0],
+                    positioning: 'center-left'
+                });
+                map.addOverlay(helpTooltip);
+            }
+
+            function createMeasureTooltip() {
+                if (measureTooltipElement) {
+                   measureTooltipElement.parentElement.removeChild(measureTooltipElement);
+                }
+                measureTooltipElement = document.createElement('div');
+                measureTooltipElement.className = 'ol-tooltip ol-tooltip-measure';
+                measureTooltip = new ol.Overlay({
+                    element: measureTooltipElement,
+                    offset: [0, -15],
+                    positioning: 'bottom-center'
+                });
+                map.addOverlay(measureTooltip);
+            }
+            
+            mapFunctions.pointerMoveHandler = function(evt) {
+                if (evt.dragging) {
+                    return;
+                }
+                let helpMsg = 'Clique para iniciar a medição';
+                
+                if (measureDraw) {
+                     const sketch = measureDraw.sketch;
+                     if(sketch) {
+                         const geom = sketch.getGeometry();
+                         if (geom instanceof ol.geom.Polygon) {
+                            helpMsg = 'Continue clicando para desenhar o polígono';
+                         } else if (geom instanceof ol.geom.LineString) {
+                            helpMsg = 'Continue clicando para desenhar a linha';
+                         }
+                     }
+                }
+                
+                if(helpTooltipElement) {
+                    helpTooltipElement.innerHTML = helpMsg;
+                    helpTooltip.setPosition(evt.coordinate);
+                    helpTooltipElement.classList.remove('hidden');
+                }
+            };
+
+            mapFunctions.formatLength = (line) => {
+                const length = ol.sphere.getLength(line);
+                return length > 100 ? `${(length / 1000).toFixed(2)} km` : `${length.toFixed(2)} m`;
+            };
+
+            mapFunctions.formatArea = (polygon) => {
+                const area = ol.sphere.getArea(polygon);
+                return area > 10000 ? `${(area / 1000000).toFixed(2)} km²` : `${area.toFixed(2)} m²`;
+            };
+            
+            mapFunctions.toggleMeasureDistance = () => {
+                if (measureDraw && measureDraw.type_ === 'LineString') {
+                    mapFunctions.clearMeasurements();
+                } else {
+                    mapFunctions.clearMeasurements(); // Limpa qualquer outra medição antes
+                    mapFunctions.addInteraction('LineString');
+                }
+            };
+            mapFunctions.toggleMeasureArea = () => {
+                if (measureDraw && measureDraw.type_ === 'Polygon') {
+                     mapFunctions.clearMeasurements();
+                } else {
+                    mapFunctions.clearMeasurements(); // Limpa qualquer outra medição antes
+                    mapFunctions.addInteraction('Polygon');
+                }
+            };
+
+            mapFunctions.clearMeasurements = function() {
+                if (measureDraw) {
+                    map.removeInteraction(measureDraw);
+                    measureDraw = null;
+                }
+                if (measureLayer) {
+                    map.removeLayer(measureLayer);
+                    measureLayer = null;
+                }
+                if (helpTooltip) map.removeOverlay(helpTooltip);
+                if (measureTooltip) map.removeOverlay(measureTooltip);
+                
+                // Limpa tooltips estáticos que possam ter ficado
+                const staticTooltips = document.querySelectorAll('.ol-tooltip-static');
+                staticTooltips.forEach(tip => tip.remove());
+                
+                map.un('pointermove', mapFunctions.pointerMoveHandler);
+            };
+
+            /* ==================== Funcionalidades de Impressão ==================== */
+            mapFunctions.activatePrintMode = function() {
+                document.body.classList.add('print-mode-active');
+                printModeControls.style.display = 'flex';
+                northArrowPrint.style.display = 'block';
+            };
+
+            mapFunctions.deactivatePrintMode = function() {
+                document.body.classList.remove('print-mode-active');
+                printModeControls.style.display = 'none';
+                northArrowPrint.style.display = 'none';
+            };
+
+            mapFunctions.triggerPrint = () => window.print();
+
+            /* ==================== Funcionalidades de Exportação (KML) ==================== */
+            mapFunctions.mostrarOpcoesExportacao = async function() {
+                const inputOptions = Object.keys(camadas).reduce((acc, key) => {
+                    acc[key] = camadas[key].nome;
+                    return acc;
+                }, {});
+
+                const { value: camadaKey } = await Swal.fire({
+                    title: 'Exportar Camada para KML',
+                    input: 'select',
+                    inputOptions: inputOptions,
+                    inputPlaceholder: 'Selecione a camada',
+                    showCancelButton: true,
+                    confirmButtonText: 'Exportar',
+                    cancelButtonText: 'Cancelar',
+                    inputValidator: (value) => {
+                        if (!value) {
+                            return 'Você precisa selecionar uma camada!';
+                        }
+                    }
+                });
+                if (camadaKey) {
+                    mapFunctions.exportLayerToKML(camadaKey);
+                }
+            };
+
+            mapFunctions.exportLayerToKML = function(camadaKey) {
+                const camada = camadas[camadaKey];
+                if (!camada.layer || camada.source.getFeatures().length === 0) {
+                    Swal.fire('Erro', `A camada "${camada.nome}" está vazia ou não foi carregada.`, 'error');
+                    return;
+                }
+
+                const kmlFormat = new ol.format.KML({
+                    extractStyles: true,
+                    writeStyles: true,
+                    showPointNames: true
+                });
+
+                const kmlString = kmlFormat.writeFeatures(camada.source.getFeatures(), {
+                    dataProjection: 'EPSG:4326',
+                    featureProjection: map.getView().getProjection()
+                });
+
+                const blob = new Blob([kmlString], { type: 'application/vnd.google-earth.kml+xml;charset=utf-8' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `${camada.nome.replace(/\s+/g, '_')}.kml`;
+                link.click();
+                URL.revokeObjectURL(link.href);
+                Swal.fire('Sucesso!', `A camada "${camada.nome}" foi exportada para KML.`, 'success');
+            };
+
+            /* ==================== Funcionalidade de Busca de Feições ==================== */
+            const camadaSelect = document.getElementById('camadaSelect');
+            const campoSelect = document.getElementById('campoSelect');
+            const valorBuscaInput = document.getElementById('valorBusca');
+            const sugestoesDiv = document.getElementById('sugestoes');
+            let originalFeatureStyle = null;
+
+            // Popula o select de camadas
+            const defaultOption = document.createElement('option');
+            defaultOption.value = "";
+            defaultOption.textContent = "Selecione uma camada...";
+            camadaSelect.appendChild(defaultOption);
+
+            Object.keys(camadas).forEach(key => {
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = camadas[key].nome;
+                camadaSelect.appendChild(option);
+            });
+
+            camadaSelect.addEventListener('change', () => {
+                mapFunctions.populateCampoSelect(camadaSelect.value);
+                valorBuscaInput.value = '';
+                sugestoesDiv.innerHTML = '';
+                sugestoesDiv.style.display = 'none';
+            });
+
+            mapFunctions.populateCampoSelect = function(camadaKey) {
+                campoSelect.innerHTML = '<option value="">Selecione um campo...</option>';
+                if (!camadaKey) return;
+
+                const camadaData = camadas[camadaKey];
+                if (camadaData && camadaData.source && camadaData.source.getFeatures().length > 0) {
+                    const firstFeature = camadaData.source.getFeatures()[0];
+                    const properties = firstFeature.getProperties();
+                    const propKeys = new Set();
+
+                     camadaData.source.getFeatures().forEach(f => {
+                         Object.keys(f.getProperties()).forEach(key => {
+                             if(key !== 'geometry') propKeys.add(key);
+                         });
+                     });
+
+                    propKeys.forEach(key => {
+                        const option = document.createElement('option');
+                        option.value = key;
+                        option.textContent = key;
+                        campoSelect.appendChild(option);
+                    });
+                }
+            };
+
+            valorBuscaInput.addEventListener('input', () => {
+                const query = valorBuscaInput.value.toLowerCase().trim();
+                const camadaKey = camadaSelect.value;
+                const campoKey = campoSelect.value;
+                sugestoesDiv.innerHTML = '';
+
+                if (query.length < 2 || !camadaKey || !campoKey) {
+                    sugestoesDiv.style.display = 'none';
+                    return;
+                }
+
+                const camadaData = camadas[camadaKey];
+                if (camadaData && camadaData.source) {
+                    const suggestions = new Set();
+                    camadaData.source.getFeatures().forEach(feature => {
+                        const value = feature.get(campoKey);
+                        if (value && String(value).toLowerCase().includes(query)) {
+                            suggestions.add(String(value));
+                        }
+                    });
+
+                    if (suggestions.size > 0) {
+                        suggestions.forEach(sugestao => {
+                            const item = document.createElement('div');
+                            item.className = 'sugestao-item';
+                            item.textContent = sugestao;
+                            item.onclick = () => {
+                                valorBuscaInput.value = sugestao;
+                                sugestoesDiv.style.display = 'none';
+                                mapFunctions.buscarFeicao();
+                            };
+                            sugestoesDiv.appendChild(item);
+                        });
+                        sugestoesDiv.style.display = 'block';
+                    } else {
+                        sugestoesDiv.style.display = 'none';
+                    }
+                }
+            });
+
+            document.addEventListener('click', (event) => {
+                if (!sugestoesDiv.contains(event.target) && event.target !== valorBuscaInput) {
+                    sugestoesDiv.style.display = 'none';
+                }
+            });
+
+            mapFunctions.buscarFeicao = async function() {
+                mapFunctions.clearSearchHighlight();
+                const camadaKey = camadaSelect.value;
+                const campoKey = campoSelect.value;
+                const valorBusca = valorBuscaInput.value;
+
+                if (!camadaKey || !campoKey || !valorBusca) {
+                    Swal.fire('Aviso', 'Por favor, selecione camada, campo e digite um valor para a busca.', 'warning');
+                    return;
+                }
+
+                const camadaData = camadas[camadaKey];
+                const foundFeature = camadaData?.source?.getFeatures().find(f => String(f.get(campoKey)).toLowerCase() === String(valorBusca).toLowerCase());
+
+                if (foundFeature) {
+                    currentSearchHighlightFeature = foundFeature;
+                    originalFeatureStyle = foundFeature.getStyle();
+
+                    const highlightStyle = new ol.style.Style({
+                        stroke: new ol.style.Stroke({ color: '#FFFF00', width: 5 }),
+                        fill: new ol.style.Fill({ color: 'rgba(255, 255, 0, 0.5)' }),
+                        image: new ol.style.Circle({
+                            radius: 10,
+                            fill: new ol.style.Fill({ color: '#FFFF00' }),
+                            stroke: new ol.style.Stroke({ color: '#fff', width: 2 })
+                        }),
+                        text: getTextStyle(foundFeature.get('nome') || '') // Se tiver um campo nome
+                    });
+                    
+                    foundFeature.setStyle(highlightStyle);
+
+                    map.getView().fit(foundFeature.getGeometry().getExtent(), {
+                        padding: [150, 150, 150, 150],
+                        duration: 1200,
+                        maxZoom: 20
+                    });
+
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'success',
+                        title: 'Feição encontrada!',
+                        showConfirmButton: false,
+                        timer: 3000
+                    });
+
+                } else {
+                    Swal.fire('Não Encontrado', 'Nenhuma feição corresponde aos critérios de busca.', 'info');
+                }
+            };
+
+            mapFunctions.clearSearchHighlight = function() {
+                if (currentSearchHighlightFeature) {
+                    currentSearchHighlightFeature.setStyle(originalFeatureStyle);
+                    currentSearchHighlightFeature = null;
+                    originalFeatureStyle = null;
+                }
+            };
+
+            function getRandomColor() { return '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0'); }
+
+        } // Fim da função initializeMapAndLayers
+    </script>
 </body>
 </html>
