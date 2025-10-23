@@ -297,12 +297,12 @@
             // =================================================================
             const camadas = {
                 rodovia: { nome: "Rodovias", cor: "#FF4500", layer: null, source: null, visible: false },
-                predios_publicos_PMG: { nome: "Prédios Públicos", tipo: "ponto", cor: "#000080", layer: null, source: null, visible: true },
+                predios_publicos_PMG: { nome: "Prédios Públicos", tipo: "ponto", cor: "#000080", layer: null, source: null, visible: false },
                 ruas_nomeadas: { nome: "Ruas", cor: "#A52A2A", layer: null, source: null, visible: false },
                 corpos_hidricos_gr: { nome: "Corpos Hídricos", cor: "#4682B4", layer: null, source: null, visible: false },
-                lotes_rib: { nome: "Lotes Ribeirão", cor: "#D2B48C", layer: null, source: null, visible: false },
+                lotes_gurinhem: { nome: "Lotes Ribeirão", cor: "#D2B48C", layer: null, source: null, visible: false },
                 QUADRAS_GR: { nome: "Quadras", cor: "#BDB76B", layer: null, source: null, visible: true },
-                BAIRROS_GR: { nome: "Bairros", cor: "#8A2BE2", layer: null, source: null, visible: false },
+                bairros_gurinhem: { nome: "Bairros", cor: "#8A2BE2", layer: null, source: null, visible: false },
                 ZONA_URBANA: { nome: "Zona Urbana", cor: "#8FBC8F", layer: null, source: null, visible: false },
                 zona_de_expansao: { nome: "Zona de Expansao", cor: "#DAA520", layer: null, source: null, visible: false }
             };
@@ -388,7 +388,7 @@
                     // Tenta encontrar um campo de rótulo comum
                     const labelField = props.nome || props.name || props.NOME || props.NM_BAIRRO;
 
-                    if (key === 'BAIRROS_GR') {
+                    if (key === 'bairros_gurinhem') {
                         // Estilo para Bairros: sem preenchimento, contorno roxo e rótulo
                         featureStyle = new ol.style.Style({
                             stroke: new ol.style.Stroke({ color: cfg.cor, width: 2.5 }),
