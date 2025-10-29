@@ -22,6 +22,159 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="style.css" type="text/css">
+
+    <style>
+        /* Estilos CSS essenciais para o funcionamento, adicione aqui se não tiver o style.css */
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+        .ol-popup {
+            position: absolute;
+            background-color: white;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #cccccc;
+            bottom: 12px;
+            left: -50px;
+            min-width: 280px; /* Aumentado para melhor visualização */
+            max-width: 350px; /* Adicionado limite */
+            font-family: 'Poppins', sans-serif;
+        }
+        .ol-popup-closer {
+            text-decoration: none;
+            position: absolute;
+            top: 2px;
+            right: 8px;
+            color: #333;
+            font-size: 1.2em;
+        }
+        .popup-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+        }
+        .popup-title {
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+        
+        /* ======================================================== */
+        /* NOVOS ESTILOS PARA O FORMULÁRIO DE INFORMAÇÕES (POPUP) */
+        /* ======================================================== */
+        #popup-content {
+            max-height: 250px;
+            overflow-y: auto;
+            padding-right: 5px; /* Espaço para a barra de rolagem */
+        }
+        .popup-info-grid {
+            display: grid;
+            grid-template-columns: auto 1fr; /* Coluna 1 (auto) para labels, Coluna 2 (1fr) para valores */
+            gap: 8px 10px;
+            font-size: 0.9em;
+        }
+        .info-key {
+            font-weight: 500;
+            color: #555;
+            text-align: right;
+            word-break: break-word;
+        }
+        .info-value {
+            font-weight: 400;
+            color: #111;
+            word-break: break-word; /* Quebra palavras longas */
+        }
+        /* ======================================================== */
+
+
+        .ol-tooltip {
+            position: relative;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 4px;
+            color: white;
+            padding: 4px 8px;
+            opacity: 0.8;
+            white-space: nowrap;
+            font-size: 12px;
+            cursor: default;
+        }
+        .ol-tooltip-measure {
+            opacity: 1;
+            font-weight: bold;
+        }
+        #printModeControls {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            display: none; /* Inicia escondido */
+        }
+        #northArrowPrint {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 50px;
+            height: 50px;
+            z-index: 10;
+            display: none; /* Inicia escondido */
+        }
+        .print-mode-active #sidebar, .print-mode-active .ol-control, .print-mode-active #printModeControls {
+            display: none !important;
+        }
+        .sugestao-item {
+            padding: 8px 10px; /* Mais espaçamento */
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+            font-size: 0.9em;
+        }
+        .sugestao-item:last-child {
+            border-bottom: none;
+        }
+        .sugestao-item:hover {
+            background-color: #f0f0f0;
+        }
+        #sugestoes {
+            border: 1px solid #ccc;
+            background-color: white;
+            max-height: 150px;
+            overflow-y: auto;
+            position: absolute;
+            width: calc(100% - 2px); /* Ajustado para bater com o input */
+            z-index: 100;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Sombra suave */
+        }
+
+        /* Estilos para o novo botão de Zoom na Camada */
+        .layer-control-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        .layer-control-item label {
+            flex-grow: 1;
+        }
+        .layer-control-item .zoom-btn {
+            background: none;
+            border: none;
+            color: #333;
+            font-size: 1em;
+            cursor: pointer;
+            padding: 0 5px;
+            margin-left: 10px;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+        .layer-control-item .zoom-btn:hover {
+            opacity: 1;
+            color: #007bff;
+        }
+    </style>
 </head>
 <body>
 
@@ -48,9 +201,8 @@
                     <label for="campoSelect">Selecione o Campo:</label>
                     <select id="campoSelect"></select>
                 </div>
-                <div class="form-group">
-                    <label for="valorBusca">Digite o Valor:</label>
-                    <input type="text" id="valorBusca" placeholder="Digite para buscar...">
+                <div class="form-group" style="position: relative;"> <label for="valorBusca">Digite o Valor:</label>
+                    <input type="text" id="valorBusca" placeholder="Digite para buscar..." autocomplete="off">
                     <div id="sugestoes" style="display: none;"></div>
                 </div>
                 <div id="search-buttons">
@@ -70,10 +222,10 @@
             <div id="map"></div>
             
             <div id="printModeControls">
-                 <button class="btn" onclick="triggerPrint()">Imprimir Mapa</button>
-                 <button class="btn" onclick="deactivatePrintMode()">Sair do Modo Impressão</button>
+                    <button class="btn" onclick="triggerPrint()">Imprimir Mapa</button>
+                    <button class="btn" onclick="deactivatePrintMode()">Sair do Modo Impressão</button>
             </div>
-            <img id="northArrowPrint" src="https://image.flaticon.com/icons/png/512/107/107565.png" alt="Seta Norte">
+            <img id="northArrowPrint" src="https://www.flaticon.com/svg/v2/svg/664/664876.svg" alt="Seta Norte">
 
         </main>
     </div>
@@ -111,8 +263,9 @@
     
     <script>
         /* ================= Firebase ================= */
+        // ATENÇÃO: Substitua "AIzaSyDxxxxxxx" pela sua CHAVE REAL DA API DO FIREBASE
         const firebaseConfig = {
-            apiKey: "AIzaSyDxxxxxxx", // Substitua PELA SUA CHAVE REAL DA API DO FIREBASE
+            apiKey: "AIzaSyDxxxxxxx", 
             authDomain: "ruas-gurinhem.firebaseapp.com",
             projectId: "ruas-gurinhem"
         };
@@ -152,11 +305,7 @@
         window.mostrarOpcoesExportacao = () => mapFunctions.mostrarOpcoesExportacao();
         window.buscarFeicao = () => mapFunctions.buscarFeicao();
         window.clearSearchHighlight = () => mapFunctions.clearSearchHighlight();
-
-        // **IMPORTANTE**: Garanta que 'overlay', 'content' e 'closer' sejam acessíveis globalmente
-        // ou passados como parâmetros se initializeMapAndLayers não for a primeira a ser chamada
-        // e eles forem definidos no script do HTML.
-        // No setup atual com o HTML fornecido, eles são globais.
+        window.zoomToLayer = (key) => mapFunctions.zoomToLayer(key);
 
         // Função principal para inicializar o mapa e carregar as camadas
         function initializeMapAndLayers() {
@@ -230,7 +379,7 @@
             });
 
             // Adiciona o overlay do popup ao mapa AQUI
-            if (typeof overlay !== 'undefined') { // Garante que a variável 'overlay' do HTML exista
+            if (typeof overlay !== 'undefined') { 
                 map.addOverlay(overlay);
             } else {
                 console.error("Variável 'overlay' não encontrada. Verifique se o script do HTML foi carregado corretamente.");
@@ -255,22 +404,20 @@
             const printModeControls = document.getElementById('printModeControls');
             const northArrowPrint = document.getElementById('northArrowPrint');
 
-            const olControlsToHide = [
-                document.querySelector('.ol-zoom'),
-                document.querySelector('.ol-rotate'),
-                document.querySelector('.ol-attribution'),
-            ].filter(Boolean);
-
-            // Popula o controle de camadas customizado
+            // Popula o controle de camadas customizado para camadas BASE (rádio buttons) e Imagem de Drone
             map.getLayers().forEach(layer => {
                 const title = layer.get('title');
-                if (!title) return; // Pula camadas sem título
+                if (!title) return; 
 
+                const containerDiv = document.createElement('div');
+                containerDiv.className = 'layer-control-item';
+                
                 const label = document.createElement('label');
                 const input = document.createElement('input');
-                input.type = layer.get('type') === 'base' ? 'radio' : 'checkbox';
-
-                if (input.type === 'radio') {
+                
+                // Camadas Base e Imagem de Drone
+                if (layer.get('type') === 'base') {
+                    input.type = 'radio';
                     input.name = 'baseLayer';
                     input.value = title;
                     input.checked = layer.getVisible();
@@ -281,34 +428,37 @@
                             }
                         });
                     };
-                } else {
+                } else if (layer.get('title') === '📸 Imagem de Drone') {
+                    // Adiciona o Image Layer (Drone) ao controle como checkbox
+                    input.type = 'checkbox';
                     input.checked = layer.getVisible();
                     input.onchange = () => layer.setVisible(input.checked);
+                } else {
+                    return; 
                 }
 
                 label.appendChild(input);
                 label.appendChild(document.createTextNode(' ' + title));
-                layerContentContainer.appendChild(label);
+                containerDiv.appendChild(label);
+                layerContentContainer.appendChild(containerDiv);
             });
 
             /* ================= Camadas GeoData (OpenLayers) ================= */
-            // =================================================================
-            // ===== INÍCIO DA ALTERAÇÃO: Visibilidade e Estilos Padrão =========
-            // =================================================================
+            
+            // ATUALIZADO: Adicionado 'propertyKeys' para otimizar a busca
             const camadas = {
-                rodovia: { nome: "Rodovias", cor: "#FF4500", layer: null, source: null, visible: false },
-                predios_publicos_PMG: { nome: "Prédios Públicos", tipo: "ponto", cor: "#000080", layer: null, source: null, visible: false },
-                ruas_nomeadas: { nome: "Ruas", cor: "#A52A2A", layer: null, source: null, visible: false },
-                corpos_hidricos_gr: { nome: "Corpos Hídricos", cor: "#4682B4", layer: null, source: null, visible: false },
-                lotes_gurinhem: { nome: "Lotes Ribeirão", cor: "#D2B48C", layer: null, source: null, visible: false },
-                QUADRAS_GR: { nome: "Quadras", cor: "#BDB76B", layer: null, source: null, visible: true },
-                bairros_gurinhem: { nome: "Bairros", cor: "#8A2BE2", layer: null, source: null, visible: false },
-                ZONA_URBANA: { nome: "Zona Urbana", cor: "#8FBC8F", layer: null, source: null, visible: false },
-                zona_de_expansao: { nome: "Zona de Expansao", cor: "#DAA520", layer: null, source: null, visible: false }
+                rodovia: { nome: "Rodovias", cor: "#FF4500", layer: null, source: null, visible: false, propertyKeys: new Set() },
+                predios_publicos_PMG: { nome: "Prédios Públicos", tipo: "ponto", cor: "#000080", layer: null, source: null, visible: false, propertyKeys: new Set() },
+                ruas_nomeadas: { nome: "Ruas", cor: "#A52A2A", layer: null, source: null, visible: false, propertyKeys: new Set() },
+                corpos_hidricos_gr: { nome: "Corpos Hídricos", cor: "#4682B4", layer: null, source: null, visible: false, propertyKeys: new Set() },
+                lotes_rib: { nome: "Lotes Ribeirão", cor: "#D2B48C", layer: null, source: null, visible: false, propertyKeys: new Set() },
+                QUADRAS_GR: { nome: "Quadras", cor: "#BDB76B", layer: null, source: null, visible: true, propertyKeys: new Set() },
+                bairros_gurinhem: { nome: "Bairros", cor: "#8A2BE2", layer: null, source: null, visible: false, propertyKeys: new Set() },
+                ZONA_URBANA: { nome: "Zona Urbana", cor: "#8FBC8F", layer: null, source: null, visible: false, propertyKeys: new Set() },
+                zona_de_expansao: { nome: "Zona de Expansao", tipo:"linha", cor: "#DAA520", layer: null, source: null, visible: false, propertyKeys: new Set() },
+                ac_geo: { nome: "construções", cor: "#000000", layer: null, source: null, visible: false, propertyKeys: new Set() } ,
+                lotes_gurinhem_ctm: { nome: "Lotes", cor: "#0000FF", layer: null, source: null, visible: false, propertyKeys: new Set() } 
             };
-            // =================================================================
-            // ===== FIM DA ALTERAÇÃO ==========================================
-            // =================================================================
 
             let selectedFeature = null;
             let selectedFeatureId = null;
@@ -317,14 +467,22 @@
             let modifyInteraction;
 
             // Variáveis de Medição
-            let measureDraw, measureSource, measureLayer, helpTooltipElement, helpTooltip, measureTooltipElement, measureTooltip, continuePolygon, continueLine;
+            let measureDraw, measureSource, measureLayer, helpTooltipElement, helpTooltip, measureTooltipElement, measureTooltip;
 
             const jstsOlParser = new jsts.io.OL3Parser();
 
             // --- Estilos OpenLayers ---
             function getPolygonStyle(color, weight = 1, opacity = 0.5, text = '') {
-                let fillColorArray = ol.color.fromString(String(color) || getRandomColor());
+                let fillColorArray;
+                try {
+                    fillColorArray = ol.color.fromString(String(color) || '#333333'); 
+                } catch (e) {
+                    console.error(`Erro ao converter cor de polígono: ${color}. Usando cinza padrão.`, e);
+                    fillColorArray = ol.color.fromString('#AAAAAA'); 
+                }
+                
                 fillColorArray[3] = opacity;
+                
                 return new ol.style.Style({
                     stroke: new ol.style.Stroke({ color: '#000000', width: weight }),
                     fill: new ol.style.Fill({ color: fillColorArray }),
@@ -332,10 +490,32 @@
                 });
             }
 
+            function getLineStyle(color, weight = 2) {
+                let strokeColor;
+                try {
+                    strokeColor = String(color) || '#333333';
+                } catch (e) {
+                    console.error(`Erro ao converter cor de linha: ${color}. Usando preto padrão.`);
+                    strokeColor = '#000000'; 
+                }
+                
+                return new ol.style.Style({
+                    stroke: new ol.style.Stroke({ color: strokeColor, width: weight }),
+                });
+            }
+
             function getPointStyle(color, radius = 6, text = '') {
+                let pointColor;
+                try {
+                    pointColor = String(color) || '#333333';
+                } catch (e) {
+                    console.error(`Erro ao converter cor de ponto: ${color}. Usando azul padrão.`);
+                    pointColor = '#0000FF'; 
+                }
+
                 return new ol.style.Style({
                     image: new ol.style.Circle({
-                        fill: new ol.style.Fill({ color: String(color) }),
+                        fill: new ol.style.Fill({ color: pointColor }),
                         stroke: new ol.style.Stroke({ color: '#fff', width: 1 }),
                         radius: radius
                     }),
@@ -349,71 +529,130 @@
                     fill: new ol.style.Fill({ color: '#000' }),
                     stroke: new ol.style.Stroke({ color: '#fff', width: 3 }),
                     text: text,
-                    overflow: true // Garante que o rótulo seja renderizado
+                    overflow: true
                 });
             }
 
+            /**
+             * Formata uma chave de propriedade para exibição (ex: 'nome_rua' -> 'Nome Rua')
+             */
+            function formatPropertyKey(key) {
+                if (!key) return '';
+                // Substitui underscores por espaços e capitaliza a primeira letra de cada palavra
+                return key.replace(/_/g, ' ')
+                          .replace(/\b\w/g, char => char.toUpperCase());
+            }
+
+            // ####################################################################
+            // # NOVA FUNÇÃO: Formata o VALOR da propriedade para exibição
+            // ####################################################################
+            /**
+             * Formata um valor de propriedade para exibição.
+             * Tenta formatar números (especialmente chaves com 'area') com 3 casas decimais.
+             */
+            function formatPropertyValue(key, value) {
+                if (value === null || value === undefined) {
+                    return '---';
+                }
+                
+                const sValue = String(value);
+                const lowerKey = key.toLowerCase();
+
+                // Verifica se a chave contem 'area' (ex: Area Const, Area Lote, area_lote, etc.)
+                if (lowerKey.includes('area') || lowerKey.includes('área')) {
+                    const numValue = parseFloat(sValue);
+                    if (!isNaN(numValue)) {
+                        // Formata com 3 casas decimais
+                        return numValue.toFixed(3);
+                    }
+                }
+
+                // Para outros valores, apenas retorna como string
+                return sValue.replace(/"/g, '&quot;');
+            }
+
+
             async function carregarCamada(key) {
                 const cfg = camadas[key];
+                if (cfg.layer) return; 
+
                 const ref = db.collection("GeoData").doc(key).collection("features");
                 const snap = await ref.get();
 
                 const features = [];
                 snap.forEach(doc => {
                     const dados = doc.data();
-                    const geojson = JSON.parse(dados.geometry);
-                    const props = dados.properties || {};
                     const docId = doc.id;
 
+                    // 1. ANÁLISE DO JSON e construção do OBJETO FEATURE COMPLETO
+                    let geometryObject;
+                    try {
+                        // O dado.geometry é uma STRING GeoJSON, precisamos dar o parse.
+                        geometryObject = JSON.parse(dados.geometry);
+                    } catch (e) {
+                        console.error(`[ERRO JSON] Camada ${key}, ID ${docId}: Geometria inválida/mal formatada.`, e);
+                        return;
+                    }
+
+                    // OpenLayers espera um objeto GeoJSON tipo "Feature", não apenas a geometria.
+                    const geojsonFeature = {
+                        type: "Feature",
+                        geometry: geometryObject,
+                        properties: dados.properties || {}
+                    };
+
                     const format = new ol.format.GeoJSON();
-                    const feature = format.readFeature(geojson, {
+                    const feature = format.readFeature(geojsonFeature, {
                         dataProjection: 'EPSG:4326',
                         featureProjection: 'EPSG:3857'
                     });
-                    feature.setId(docId);
-                    feature.setProperties(props);
+                    
+                    // 2. VERIFICAÇÃO DE SEGURANÇA (evita o erro 'reading type')
+                    if (!feature || !feature.getGeometry()) {
+                        console.warn(`[IGNORADO] Camada ${key}, ID ${docId}: Feature ou Geometria nula/inválida após conversão. Pulando.`);
+                        return;
+                    }
 
+                    feature.setId(docId);
+                    feature.setProperties(geojsonFeature.properties); 
+
+                    // Cria um índice de feições para a busca e popup
+                    const props = geojsonFeature.properties;
                     const cleanProps = {};
                     for (const pKey in props) {
                         if (pKey !== 'geometry' && pKey !== 'id' && pKey !== 'bbox' && pKey !== 'style') {
                             cleanProps[pKey] = props[pKey];
+                            // ATUALIZADO: Adiciona a chave ao Set de propriedades da camada
+                            cfg.propertyKeys.add(pKey);
                         }
                     }
                     featureIndex[docId] = { feature: feature, camada: key, props: cleanProps };
 
-                    // =================================================================
-                    // ===== INÍCIO DA ALTERAÇÃO: Lógica de Estilo Customizada =========
-                    // =================================================================
                     let featureStyle;
-                    // Tenta encontrar um campo de rótulo comum
                     const labelField = props.nome || props.name || props.NOME || props.NM_BAIRRO;
+                    const geometryType = feature.getGeometry().getType();
 
                     if (key === 'bairros_gurinhem') {
-                        // Estilo para Bairros: sem preenchimento, contorno roxo e rótulo
                         featureStyle = new ol.style.Style({
                             stroke: new ol.style.Stroke({ color: cfg.cor, width: 2.5 }),
-                            fill: new ol.style.Fill({ color: 'rgba(0, 0, 0, 0)' }), // Preenchimento transparente
-                            text: getTextStyle(labelField || '') // Usa o nome do bairro como rótulo
+                            fill: new ol.style.Fill({ color: 'rgba(0, 0, 0, 0)' }), 
+                            text: getTextStyle(labelField || '') 
                         });
-                    } else if (key === 'predios_publicos_PMG') {
-                        // Estilo para Prédios Públicos: ponto com rótulo fixo
+                    } else if (key === 'predios_publicos_PMG' || geometryType === 'Point') {
                         featureStyle = getPointStyle(cfg.cor, 7, labelField || '');
+                    } else if (geometryType === 'LineString' || geometryType === 'MultiLineString') {
+                        featureStyle = getLineStyle(cfg.cor, key === 'rodovia' ? 3 : 2);
                     } else {
-                        // Lógica de estilo padrão para as outras camadas
-                        const styleFunction = cfg.tipo === "ponto" ? getPointStyle : getPolygonStyle;
                         let labelText = '';
-                        if (props.inscricao_imobiliaria) {
+                        if (props.inscricao_imobiliaria) { 
                             labelText = props.inscricao_imobiliaria;
                         } else if (props.ordem !== undefined && props.ordem !== null) {
                             labelText = String(props.ordem);
                         }
-                        featureStyle = styleFunction(cfg.cor, undefined, undefined, labelText);
+                        featureStyle = getPolygonStyle(cfg.cor, undefined, 0.5, labelText);
                     }
+                    
                     feature.setStyle(featureStyle);
-                    // =================================================================
-                    // ===== FIM DA ALTERAÇÃO ==========================================
-                    // =================================================================
-
                     features.push(feature);
                 });
 
@@ -422,22 +661,60 @@
                     title: cfg.nome,
                     source: cfg.source,
                     renderBuffer: 200,
-                    visible: cfg.visible // Define a visibilidade inicial da camada
+                    visible: cfg.visible 
                 });
 
                 map.addLayer(cfg.layer);
 
+                // ADIÇÃO DO BOTÃO DE ZOOM NA CAMADA
+                const containerDiv = document.createElement('div');
+                containerDiv.className = 'layer-control-item';
+                
                 const label = document.createElement('label');
                 const checkbox = document.createElement('input');
                 checkbox.type = 'checkbox';
-                checkbox.checked = cfg.visible; // Sincroniza o checkbox com a visibilidade inicial
+                checkbox.checked = cfg.visible; 
                 checkbox.onchange = () => cfg.layer.setVisible(checkbox.checked);
                 label.appendChild(checkbox);
                 label.appendChild(document.createTextNode(' ' + cfg.nome));
-                layerContentContainer.appendChild(label);
+                
+                const zoomButton = document.createElement('button');
+                zoomButton.className = 'zoom-btn';
+                zoomButton.innerHTML = '🔍'; 
+                zoomButton.title = `Aproximar para a camada ${cfg.nome}`;
+                zoomButton.onclick = () => window.zoomToLayer(key);
+
+                containerDiv.appendChild(label);
+                containerDiv.appendChild(zoomButton);
+                layerContentContainer.appendChild(containerDiv);
             }
 
+            // Inicia o carregamento de todas as camadas
             Object.keys(camadas).forEach(carregarCamada);
+
+            // FUNÇÃO DE ZOOM NA CAMADA (Aproximar para a extensão da camada)
+            mapFunctions.zoomToLayer = function(camadaKey) {
+                const camada = camadas[camadaKey];
+                if (!camada.layer || !camada.source || camada.source.getFeatures().length === 0) {
+                    Swal.fire('Aviso', `A camada "${camada.nome}" está vazia ou não carregou completamente.`, 'info');
+                    return;
+                }
+
+                const extent = camada.source.getExtent();
+                
+                if (ol.extent.isEmpty(extent)) {
+                    Swal.fire('Aviso', `A camada "${camada.nome}" está vazia ou não contém geometrias.`, 'info');
+                    return;
+                }
+                
+                map.getView().fit(extent, {
+                    size: map.getSize(),
+                    padding: [50, 50, 50, 50],
+                    duration: 1500,
+                    maxZoom: 20
+                });
+            };
+
 
             const select = new ol.interaction.Select({
                 style: new ol.style.Style({
@@ -460,15 +737,19 @@
 
             let currentSearchHighlightFeature = null;
 
+
+            // ====================================================================
+            // ATUALIZADO: LÓGICA DO POPUP (map.on('click'))
+            // ====================================================================
             map.on('click', async (event) => {
-                // Verifica se o clique foi no popup. Se sim, não faz nada para evitar recursão ou fechamento indesejado.
+                // Impede que o popup feche se o clique for dentro dele
                 const clickedElement = document.getElementById('map-popup');
                 if (clickedElement && clickedElement.contains(event.originalEvent.target)) {
                     return;
                 }
 
+                // Não mostra popup para a feição que já está destacada pela busca
                 const feature = map.forEachFeatureAtPixel(event.pixel, (feature, layer) => {
-                    // Ignora a feature de highlight de busca se clicada novamente
                     if (feature === currentSearchHighlightFeature) return null;
                     return feature;
                 });
@@ -483,33 +764,35 @@
 
                     const featureProps = featureIndex[featureId]?.props || {};
                     
-                    let popupHtml = '<form>'; // Inicia um formulário
+                    // REFEITO: Gera HTML limpo e padronizado, sem formulário ou edição
+                    let popupHtml = '<div class="popup-info-grid">'; 
+                    
+                    // Ordena as chaves alfabeticamente para consistência
+                    const sortedKeys = Object.keys(featureProps).sort();
 
-                    // Itera sobre todas as propriedades da feição
-                    for (const key in featureProps) {
-                        // Garante que a propriedade pertence ao objeto e não ao seu protótipo
-                        if (Object.prototype.hasOwnProperty.call(featureProps, key)) {
-                            const value = featureProps[key] !== null && featureProps[key] !== undefined ? featureProps[key] : '';
-                            
-                            popupHtml += `
-                                <div class="form-group">
-                                    <label for="prop_${key}">${key}</label>
-                                    <input type="text" id="prop_${key}" name="${key}" value="${String(value).replace(/"/g, '&quot;')}" readonly>
-                                </div>
-                            `;
-                        }
+                    for (const key of sortedKeys) {
+                        // ####################################################################
+                        // # ATUALIZADO: Usa as novas funções de formatação
+                        // ####################################################################
+                        const rawValue = featureProps[key];
+                        const displayKey = formatPropertyKey(key); 
+                        const displayValue = formatPropertyValue(key, rawValue); // Formata o valor
+                        
+                        popupHtml += `
+                            <div class="info-key">${displayKey}:</div>
+                            <div class="info-value">${displayValue}</div>
+                        `;
                     }
 
-                    popupHtml += '<button type="button" class="btn-save-changes">Salvar Alterações</button>';
-                    popupHtml += '</form>'; // Fecha o formulário
+                    popupHtml += '</div>'; // Fecha o .popup-info-grid
 
-                    document.getElementById('popup-title').innerText = `Atributos da Feição: ${featureId}`;
+                    document.getElementById('popup-title').innerText = `Informações: ${camadas[camadaKey].nome}`;
 
                     if (typeof content !== 'undefined') {
                         content.innerHTML = popupHtml;
                         overlay.setPosition(event.coordinate);
                     } else {
-                         console.error("Variável 'content' não encontrada.");
+                        console.error("Variável 'content' não encontrada.");
                     }
 
                 } else {
@@ -522,7 +805,7 @@
 
             /* ==================== Medição de Distância e Área ==================== */
             mapFunctions.addInteraction = function(type) {
-                mapFunctions.clearMeasurements();
+                mapFunctions.clearMeasurements(true); 
 
                 measureSource = new ol.source.Vector();
                 measureLayer = new ol.layer.Vector({
@@ -580,14 +863,16 @@
                     measureTooltip.setOffset([0, -7]);
                     ol.Observable.unByKey(listener);
                     
-                    // Cleanup
+                    // Limpa o tooltip de ajuda
                     map.un('pointermove', mapFunctions.pointerMoveHandler);
                     if (helpTooltipElement) {
                         helpTooltipElement.parentElement.removeChild(helpTooltipElement);
                         helpTooltipElement = null;
                     }
-                    map.removeOverlay(helpTooltip);
+                    if (helpTooltip) map.removeOverlay(helpTooltip);
+                    
                     map.removeInteraction(measureDraw);
+                    measureDraw = null;
                 });
             };
 
@@ -625,16 +910,13 @@
                 }
                 let helpMsg = 'Clique para iniciar a medição';
                 
-                if (measureDraw) {
-                     const sketch = measureDraw.sketch;
-                     if(sketch) {
-                         const geom = sketch.getGeometry();
-                         if (geom instanceof ol.geom.Polygon) {
-                            helpMsg = 'Continue clicando para desenhar o polígono';
-                         } else if (geom instanceof ol.geom.LineString) {
-                            helpMsg = 'Continue clicando para desenhar a linha';
-                         }
-                     }
+                if (measureDraw && measureDraw.sketch) {
+                    const geom = measureDraw.sketch.getGeometry();
+                    if (geom instanceof ol.geom.Polygon) {
+                        helpMsg = 'Continue clicando para desenhar o polígono (Clique duplo para finalizar)';
+                    } else if (geom instanceof ol.geom.LineString) {
+                        helpMsg = 'Continue clicando para desenhar a linha (Clique duplo para finalizar)';
+                    }
                 }
                 
                 if(helpTooltipElement) {
@@ -646,26 +928,27 @@
 
             mapFunctions.formatLength = (line) => {
                 const length = ol.sphere.getLength(line);
-                return `${length.toFixed(2)} m`;            };
+                return `${length.toFixed(2)} m`; 
+            };
 
+            // ATUALIZADO: Medição de área da FERRAMENTA com 3 casas decimais
             mapFunctions.formatArea = (polygon) => {
                 const area = ol.sphere.getArea(polygon);
-                return `${area.toFixed(2)} m²`;            };
+                return `${area.toFixed(3)} m²`; 
+            };
             
             mapFunctions.toggleMeasureDistance = () => {
-                if (measureDraw && measureDraw.type_ === 'LineString') {
-                    mapFunctions.clearMeasurements();
-                } else {
-                    mapFunctions.clearMeasurements(); // Limpa qualquer outra medição antes
+                if (!measureDraw || measureDraw.type_ !== 'LineString') {
                     mapFunctions.addInteraction('LineString');
+                } else {
+                    mapFunctions.clearMeasurements();
                 }
             };
             mapFunctions.toggleMeasureArea = () => {
-                if (measureDraw && measureDraw.type_ === 'Polygon') {
-                     mapFunctions.clearMeasurements();
-                } else {
-                    mapFunctions.clearMeasurements(); // Limpa qualquer outra medição antes
+                if (!measureDraw || measureDraw.type_ !== 'Polygon') {
                     mapFunctions.addInteraction('Polygon');
+                } else {
+                    mapFunctions.clearMeasurements();
                 }
             };
 
@@ -681,7 +964,6 @@
                 if (helpTooltip) map.removeOverlay(helpTooltip);
                 if (measureTooltip) map.removeOverlay(measureTooltip);
                 
-                // Limpa tooltips estáticos que possam ter ficado
                 const staticTooltips = document.querySelectorAll('.ol-tooltip-static');
                 staticTooltips.forEach(tip => tip.remove());
                 
@@ -783,31 +1065,28 @@
                 sugestoesDiv.style.display = 'none';
             });
 
+
+            // ATUALIZADO: Popula o select de campos usando os 'propertyKeys' otimizados
             mapFunctions.populateCampoSelect = function(camadaKey) {
                 campoSelect.innerHTML = '<option value="">Selecione um campo...</option>';
                 if (!camadaKey) return;
 
                 const camadaData = camadas[camadaKey];
-                if (camadaData && camadaData.source && camadaData.source.getFeatures().length > 0) {
-                    const firstFeature = camadaData.source.getFeatures()[0];
-                    const properties = firstFeature.getProperties();
-                    const propKeys = new Set();
-
-                     camadaData.source.getFeatures().forEach(f => {
-                         Object.keys(f.getProperties()).forEach(key => {
-                             if(key !== 'geometry') propKeys.add(key);
-                         });
-                     });
-
-                    propKeys.forEach(key => {
+                if (camadaData && camadaData.propertyKeys) {
+                    // Ordena as chaves para exibição consistente
+                    const sortedKeys = Array.from(camadaData.propertyKeys).sort();
+                    
+                    sortedKeys.forEach(key => {
                         const option = document.createElement('option');
                         option.value = key;
-                        option.textContent = key;
+                        // Usa a função de formatação para um nome amigável
+                        option.textContent = formatPropertyKey(key); 
                         campoSelect.appendChild(option);
                     });
                 }
             };
 
+            // Lógica de sugestão (autocomplete)
             valorBuscaInput.addEventListener('input', () => {
                 const query = valorBuscaInput.value.toLowerCase().trim();
                 const camadaKey = camadaSelect.value;
@@ -822,12 +1101,18 @@
                 const camadaData = camadas[camadaKey];
                 if (camadaData && camadaData.source) {
                     const suggestions = new Set();
-                    camadaData.source.getFeatures().forEach(feature => {
+                    const features = camadaData.source.getFeatures();
+                    
+                    // Limita o número de features a verificar para performance
+                    const maxFeaturesToCheck = 500; 
+                    
+                    for(let i = 0; i < features.length && suggestions.size < 10; i++) {
+                        const feature = features[i];
                         const value = feature.get(campoKey);
                         if (value && String(value).toLowerCase().includes(query)) {
                             suggestions.add(String(value));
                         }
-                    });
+                    }
 
                     if (suggestions.size > 0) {
                         suggestions.forEach(sugestao => {
@@ -848,12 +1133,15 @@
                 }
             });
 
+            // Fecha as sugestões se clicar fora
             document.addEventListener('click', (event) => {
                 if (!sugestoesDiv.contains(event.target) && event.target !== valorBuscaInput) {
                     sugestoesDiv.style.display = 'none';
                 }
             });
 
+            
+            // ATUALIZADO: Lógica de busca de feição
             mapFunctions.buscarFeicao = async function() {
                 mapFunctions.clearSearchHighlight();
                 const camadaKey = camadaSelect.value;
@@ -866,11 +1154,19 @@
                 }
 
                 const camadaData = camadas[camadaKey];
-                const foundFeature = camadaData?.source?.getFeatures().find(f => String(f.get(campoKey)).toLowerCase() === String(valorBusca).toLowerCase());
+                
+                // Usa .filter() para encontrar TODAS as correspondências
+                const foundFeatures = camadaData?.source?.getFeatures().filter(
+                    f => String(f.get(campoKey)).toLowerCase() === String(valorBusca).toLowerCase()
+                );
 
-                if (foundFeature) {
-                    currentSearchHighlightFeature = foundFeature;
-                    originalFeatureStyle = foundFeature.getStyle();
+                if (foundFeatures && foundFeatures.length > 0) {
+                    
+                    // Pega a primeira feição para destacar
+                    const featureToHighlight = foundFeatures[0]; 
+                    
+                    currentSearchHighlightFeature = featureToHighlight;
+                    originalFeatureStyle = featureToHighlight.getStyle();
 
                     const highlightStyle = new ol.style.Style({
                         stroke: new ol.style.Stroke({ color: '#FFFF00', width: 5 }),
@@ -880,24 +1176,30 @@
                             fill: new ol.style.Fill({ color: '#FFFF00' }),
                             stroke: new ol.style.Stroke({ color: '#fff', width: 2 })
                         }),
-                        text: getTextStyle(foundFeature.get('nome') || '') // Se tiver um campo nome
+                        text: getTextStyle(featureToHighlight.get('nome') || featureToHighlight.get(campoKey) || '') 
                     });
                     
-                    foundFeature.setStyle(highlightStyle);
+                    featureToHighlight.setStyle(highlightStyle);
 
-                    map.getView().fit(foundFeature.getGeometry().getExtent(), {
+                    map.getView().fit(featureToHighlight.getGeometry().getExtent(), {
                         padding: [150, 150, 150, 150],
                         duration: 1200,
                         maxZoom: 20
                     });
 
+                    // Informa se mais de uma feição foi encontrada
+                    let title = 'Feição encontrada!';
+                    if (foundFeatures.length > 1) {
+                        title = `${foundFeatures.length} feições encontradas! Destacando a primeira.`;
+                    }
+
                     Swal.fire({
                         toast: true,
                         position: 'top-end',
                         icon: 'success',
-                        title: 'Feição encontrada!',
+                        title: title,
                         showConfirmButton: false,
-                        timer: 3000
+                        timer: 3500
                     });
 
                 } else {
